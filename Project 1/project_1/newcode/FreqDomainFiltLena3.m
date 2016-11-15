@@ -18,7 +18,7 @@ f = imread('lena512.bmp');
 
 h = myblurgen('gaussian', 8);
 noise_mean = 0;
-noise_var = 32;
+noise_var = 0.0833; % Why 32? Maybe 0.0833 instead?
 noise_gaussian = mynoisegen('gaussian', M, N, noise_mean, noise_var);
 
 f_blured = conv2(double(f), h, 'same');
@@ -34,20 +34,21 @@ H = fft2(h);
 Fmagn = abs(F);
 Gmagn = abs(G);
 
+%% Image restoration with own function
 
-
+f_restored = jzlk_wienerFilter(g, h, noise_var);
 
 
 %% Image restoration
  
-nsr = noise_var/var(double(f(:)));
-f_restored = deconvwnr(g, h, nsr);
-
-for i = 1:M
-    for j = 1:N
-        f_restored(i,j) = min(max(f_restored(i,j), 0), 255);
-    end
-end
+% nsr = noise_var/var(double(f(:)));
+% f_restored = deconvwnr(g, h, nsr);
+% 
+% for i = 1:M
+%     for j = 1:N
+%         f_restored(i,j) = min(max(f_restored(i,j), 0), 255);
+%     end
+% end
 
 
 %% Plots
@@ -79,12 +80,3 @@ title('blured and noisy image');
 subplot(1,2,2);
 imshow(uint8(f_restored));
 title('restored image');
-
-
-
-
-
-
-
-
-
