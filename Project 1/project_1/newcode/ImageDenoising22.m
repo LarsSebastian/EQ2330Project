@@ -12,6 +12,7 @@ clear all;
 
 %I = imread('images/lena512.bmp');
 I = imread('images/lena512.bmp');
+[M,N] = size(I);
 
 %% Noise Generation with mynoisegen
 
@@ -38,18 +39,25 @@ I_saltpepper_meanfilt = conv2(double(I_saltpepper), double(mean_filt), 'same');
 
 %% Create median filter and apply to noisy image
 I_gaussian_zeropad = I_gaussian;
+I_saltpepper_zeropad = I_saltpepper;
 
-while round(length(I_gaussian_zeropad)/3) ~= length(I_gaussian_zeropad)/3
-    zero_pad = zeros(1,length(I_gaussian));
-    I_gaussian_zeropad = [I_gaussian, zero_pad'];
-    I_gaussian_zeropad = [I_gaussian_zeropad; [zero_pad 0]];
-    
-    I_saltpepper_zeropad = [I_saltpepper, zero_pad'];
-    I_saltpepper_zeropad = [I_saltpepper_zeropad; [zero_pad 0]];
-end
+I_gaussian_zeropad = [zeros(1,M); I_gaussian_zeropad; zeros(1,M)];
+I_gaussian_zeropad = [zeros(M+2,1), I_gaussian_zeropad, zeros(M+2,1)];
 
-for i = 2:3:length(I_gaussian_zeropad)
-    for j = 2:3:length(I_gaussian_zeropad)
+I_saltpepper_zeropad = [zeros(1,M); I_saltpepper_zeropad; zeros(1,M)];
+I_saltpepper_zeropad = [zeros(M+2,1), I_saltpepper_zeropad, zeros(M+2,1)];
+
+% while round(length(I_gaussian_zeropad)/3) ~= length(I_gaussian_zeropad)/3
+%     zero_pad = zeros(1,length(I_gaussian));
+%     I_gaussian_zeropad = [I_gaussian, zero_pad'];
+%     I_gaussian_zeropad = [I_gaussian_zeropad; [zero_pad 0]];
+%     
+%     I_saltpepper_zeropad = [I_saltpepper, zero_pad'];
+%     I_saltpepper_zeropad = [I_saltpepper_zeropad; [zero_pad 0]];
+% end
+
+for i = 2:1:length(I_gaussian_zeropad)-1
+    for j = 2:1:length(I_gaussian_zeropad)-1
         grey_val_gaussian = [];
         grey_val_saltpepper = [];
         
@@ -64,39 +72,67 @@ for i = 2:3:length(I_gaussian_zeropad)
         med_gaussian = median(grey_val_gaussian);
         med_saltpepper = median(grey_val_saltpepper);
         
-        I_gaussian_medfilt(i-1:i+1, j-1:j+1) = med_gaussian;
-        I_saltpepper_medfilt(i-1:i+1, j-1:j+1) = med_saltpepper;
+        I_gaussian_medfilt(i,j) = med_gaussian;
+        I_saltpepper_medfilt(i,j) = med_saltpepper;
     end
 end
 
-I_gaussian_medfilt = I_gaussian_medfilt(1:length(I_gaussian), 1:length(I_gaussian));
-I_saltpepper_medfilt = I_saltpepper_medfilt(1:length(I_gaussian), 1:length(I_gaussian));
+I_gaussian_medfilt = I_gaussian_medfilt(2:end, 2:end);
+I_saltpepper_medfilt = I_saltpepper_medfilt(2:end, 2:end);
 
 fig1 = figure(1);
 
 subplot(2,3,1)
 imhist(uint8(I_gaussian));
 title('Gaussian noise');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
 
 subplot(2,3,2)
 imhist(uint8(I_gaussian_meanfilt));
 title('Gaussian noise- mean filter');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
 
 subplot(2,3,3)
 imhist(uint8(I_gaussian_medfilt));
 title('Gaussian noise- median filter');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
 
 subplot(2,3,4)
 imhist(I_saltpepper);
 title('SaltPepper noise');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
 
 subplot(2,3,5)
 imhist(uint8(I_saltpepper_meanfilt));
 title('SaltPepper noise - mean filter');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
 
 subplot(2,3,6)
+
 imhist(I_saltpepper_medfilt);
+
 title('SaltPepper noise - median filter');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
+
+
 
 
 fig2 = figure(2);
@@ -124,6 +160,36 @@ title('SaltPepper noise - mean filter');
 subplot(2,3,6)
 imshow(I_saltpepper_medfilt);
 title('SaltPepper noise - mean filter');
+
+fig3 = figure(3);
+subplot(3,1,1)
+imhist(I);
+title('histogram of clear image');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
+subplot(3,1,2);
+imhist(uint8(I_gaussian));
+title('histogram of image with gaussian noise');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
+subplot(3,1,3);
+imhist(I_saltpepper);
+title('histogram of image with salt-peper-noise');
+xlabel('grey-scale values');
+ylabel('#');
+axis([0 256 0 3000])
+
+fig4 = figure(4);
+subplot(1,2,1)
+imshow(uint8(I_gaussian));
+title('Gaussian noise');
+subplot(1,2,2)
+imshow(uint8(I_saltpepper));
+title('SaltPepper noise');
 
 
 
