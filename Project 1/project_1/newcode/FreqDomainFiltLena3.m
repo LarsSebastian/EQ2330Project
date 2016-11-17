@@ -1,4 +1,4 @@
-% Assignment 2.2 for Project 1 in EQ2330
+% Assignment 3 for Project 1 in EQ2330
 % Fall Term 2016
 % Course EQ2330 Image and Video Processing
 % Project 1
@@ -36,7 +36,12 @@ Gmagn = abs(G);
 
 %% Image restoration with own function
 
+% Restore image with Wiener Filter. The blurred image is tapered before
+% being filtered
 f_restored = jzlk_wienerFilter(g, h, noise_var);
+
+% 
+f_restored_wET = jzlk_wienerFilterWithoutTapering(g,h,noise_var);
 
 
 %% Image restoration
@@ -56,13 +61,22 @@ f_restored = jzlk_wienerFilter(g, h, noise_var);
 fig1 = figure(1);
 subplot(1,2,1);
 imshow(f);
-title('original image');
+title('Original Image');
 
 subplot(1,2,2);
 imshow(uint8(g));
-title('blured and noisy image');
+title('Blurred and Noisy Image');
 
 fig2 = figure(2);
+subplot(1,2,1);
+imshow(f_restored);
+title('Restored Image - Edge Tapering')
+
+subplot(1,2,2);
+imshow(f_restored_wET)
+title('Restored Image - Without Edge Tapering');
+
+fig3 = figure(3);
 subplot(1,2,1);
 imagesc(fftshift(log(Fmagn)));
 title('Spectrum of original image');
@@ -71,12 +85,12 @@ subplot(1,2,2);
 imagesc(fftshift(log(Gmagn)));
 title('Spectrum of blured and noisy image');
 
-
-fig3 = figure(3);
-subplot(1,2,1);
-imshow(uint8(g));
-title('blured and noisy image');
-
-subplot(1,2,2);
-imshow(uint8(f_restored));
-title('restored image');
+% 
+% fig3 = figure(3);
+% subplot(1,2,1);
+% imshow(uint8(g));
+% title('blured and noisy image');
+% 
+% subplot(1,2,2);
+% imshow(uint8(f_restored));
+% title('restored image');

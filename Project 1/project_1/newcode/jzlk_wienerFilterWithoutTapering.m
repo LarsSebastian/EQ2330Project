@@ -1,14 +1,12 @@
-function [ fhat ] = jzlk_wienerFilter( g, h, sigma2 )
+function [ fhat ] = jzlk_wienerFilterWithoutTapering( g, h, sigma2 )
 %Implements Wiener Filtering by simplified formular eq.5.8-6
 %  FHat(u,v) = 1/H(u,v) * |H(u,v)|^2 / (|H(u,v)|^2+K) G(u,v)
 
-% Taper edges to remove disturbing lines
-PSF = fspecial('gaussian',60,10);
-gTapered =  edgetaper(g,PSF);
+totSize = size(g) + size(h);
 
 % Make Fourier transforms of same size
-G = fft2(gTapered);
-H = fft2(h, size(gTapered,1), size(gTapered,2));
+G = fft2(g, totSize(1), totSize(2));
+H = fft2(h, totSize(1), totSize(2));
 
 % Fix K to some value
 K = sigma2^3;
@@ -21,7 +19,8 @@ TransferFcn = H2./(H.*(H2+K)); % eq 5.8-6
 Fhat = TransferFcn .* G;
 
 % Take inverse Fourier transform to go back to spatial domain
-fhat = uint8(ifft2(Fhat));
+fhat = ifft2(Fhat);
+fhat = uint8(fhat(1:size(g,1), 1:size(g,2)));
 
 end
 
