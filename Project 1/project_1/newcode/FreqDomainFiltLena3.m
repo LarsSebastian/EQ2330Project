@@ -40,7 +40,8 @@ Gmagn = abs(G);
 % being filtered
 f_restored = jzlk_wienerFilter(g, h, noise_var);
 
-% 
+% Restore image with Wiener Filter. The blurred image is zero padded before
+% being filtered in order to avoid artifacts due to circular convolution
 f_restored_wET = jzlk_wienerFilterWithoutTapering(g,h,noise_var);
 
 
@@ -85,12 +86,3 @@ subplot(1,2,2);
 imagesc(fftshift(log(Gmagn)));
 title('Spectrum of blured and noisy image');
 
-% 
-% fig3 = figure(3);
-% subplot(1,2,1);
-% imshow(uint8(g));
-% title('blured and noisy image');
-% 
-% subplot(1,2,2);
-% imshow(uint8(f_restored));
-% title('restored image');

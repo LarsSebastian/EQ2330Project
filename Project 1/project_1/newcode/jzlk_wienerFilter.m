@@ -10,8 +10,9 @@ gTapered =  edgetaper(g,PSF);
 G = fft2(gTapered);
 H = fft2(h, size(gTapered,1), size(gTapered,2));
 
-% Fix K to some value
-K = sigma2^3;
+% The exact value for K is given by K = sigma2/var(f). Approximate var(f)
+% by var(g)/2
+K = 2* sigma2 / var(g(:));
 
 % Calculate Wiener Transfer Function
 H2 = abs(H).^2;
