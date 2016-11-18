@@ -16,7 +16,7 @@ I = imread('images/lena512.bmp');
 %% Plot Histogram
 fig1 = figure(1);
 imhist(I);
-xlabel('grey levels');
+xlabel('gray levels');
 ylabel('# of occurrence');
 title('original histogram');
 
@@ -31,8 +31,9 @@ Ilow = a*I+b;
 % imshow(uint8(Ilow));
 
 fig3 = figure(3);
+set(gca,'fontsize',18)
 imhist(Ilow);
-xlabel('grey levels');
+xlabel('gray levels');
 ylabel('# of occurrence');
 title('low contrast histogram');
 
@@ -55,9 +56,10 @@ end
 
 fig4 = figure(4);
 imhist(uint8(Ieq));
-xlabel('grey levels');
+xlabel('gray levels');
 ylabel('# of occurrence');
 title('equalized histogram');
+ylim([0, 11000])
 
 
 

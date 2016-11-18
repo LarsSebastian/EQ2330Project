@@ -83,52 +83,57 @@ I_saltpepper_medfilt = I_saltpepper_medfilt(2:end, 2:end);
 fig1 = figure(1);
 
 subplot(2,3,1)
-imhist(uint8(I_gaussian));
+hist(uint8(I_gaussian(:)), [0:255]);
+set(gca,'fontsize',12)
 title('Gaussian noise');
-xlabel('grey-scale values');
-ylabel('#');
+xlabel('gray levels');
+ylabel('# of occurrence');
 axis([0 256 0 3000])
 
 
 subplot(2,3,2)
-imhist(uint8(I_gaussian_meanfilt));
+set(gca,'fontsize',12)
+hist(uint8(I_gaussian_meanfilt(:)), 0:255);
 title('Gaussian noise- mean filter');
-xlabel('grey-scale values');
-ylabel('#');
+xlabel('gray levels');
+ylabel('# of occurrence');
 axis([0 256 0 3000])
 
 
 subplot(2,3,3)
-imhist(uint8(I_gaussian_medfilt));
+set(gca,'fontsize',12)
+hist(uint8(I_gaussian_medfilt(:)), 0:255);
 title('Gaussian noise- median filter');
-xlabel('grey-scale values');
-ylabel('#');
+xlabel('gray levels');
+ylabel('# of occurrence');
 axis([0 256 0 3000])
 
 
 subplot(2,3,4)
-imhist(I_saltpepper);
+set(gca,'fontsize',12)
+hist(I_saltpepper(:), 0:255);
 title('SaltPepper noise');
-xlabel('grey-scale values');
-ylabel('#');
+xlabel('gray levels');
+ylabel('# of occurrence');
 axis([0 256 0 3000])
 
 
 subplot(2,3,5)
-imhist(uint8(I_saltpepper_meanfilt));
+set(gca,'fontsize',12)
+hist(uint8(I_saltpepper_meanfilt(:)), 0:255);
 title('SaltPepper noise - mean filter');
-xlabel('grey-scale values');
-ylabel('#');
+xlabel('gray levels');
+ylabel('# of occurrence');
 axis([0 256 0 3000])
 
 
 subplot(2,3,6)
-
-imhist(I_saltpepper_medfilt);
+set(gca,'fontsize',12)
+hist(I_saltpepper_medfilt(:), 0:255);
 
 title('SaltPepper noise - median filter');
-xlabel('grey-scale values');
-ylabel('#');
+xlabel('gray levels');
+ylabel('# of occurrence');
 axis([0 256 0 3000])
 
 
@@ -162,34 +167,31 @@ imshow(I_saltpepper_medfilt);
 title('SaltPepper noise - mean filter');
 
 fig3 = figure(3);
-subplot(3,1,1)
-imhist(I);
+% subplot(3,1,1)
+set(gca,'fontsize',12)
+hist(I(:), 0:255);
 title('histogram of clear image');
-xlabel('grey-scale values');
-ylabel('#');
+xlabel('gray levels');
+ylabel('# of occurrence');
 axis([0 256 0 3000])
 
-subplot(3,1,2);
-imhist(uint8(I_gaussian));
-title('histogram of image with gaussian noise');
-xlabel('grey-scale values');
-ylabel('#');
-axis([0 256 0 3000])
+% subplot(3,1,2);
+% set(gca,'fontsize',12)
+% hist(uint8(I_gaussian(:)), 0:255);
+% title('histogram of image with gaussian noise');
+% xlabel('gray levels');
+% ylabel('# of occurrence');
+% axis([0 256 0 3000])
+% 
+% subplot(3,1,3);
+% set(gca,'fontsize',12)
+% hist(I_saltpepper(:), 0:255);
+% title('histogram of image with salt-peper-noise');
+% xlabel('gray levels');
+% ylabel('# of occurrence');
+% axis([0 256 0 3000])
 
-subplot(3,1,3);
-imhist(I_saltpepper);
-title('histogram of image with salt-peper-noise');
-xlabel('grey-scale values');
-ylabel('#');
-axis([0 256 0 3000])
 
-fig4 = figure(4);
-subplot(1,2,1)
-imshow(uint8(I_gaussian));
-title('Gaussian noise');
-subplot(1,2,2)
-imshow(uint8(I_saltpepper));
-title('SaltPepper noise');
 
 
 
