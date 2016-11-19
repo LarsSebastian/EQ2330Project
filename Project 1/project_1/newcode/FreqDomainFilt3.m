@@ -65,12 +65,13 @@ title('Blurred and Noisy Image');
 
 fig2 = figure(2);
 subplot(1,2,1);
-imshow(f_restored);
-title('Restored Image - Edge Tapering')
+imshow(uint8(g));
+title('Blurred and Noisy Image');
 
 subplot(1,2,2);
-imshow(f_restored_wET)
-title('Restored Image - Without Edge Tapering');
+imshow(f_restored);
+title('Restored Image')
+
 
 fig3 = figure(3);
 subplot(1,2,1);

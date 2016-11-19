@@ -1,4 +1,4 @@
-% Assignment 2.2 for Project 1 in EQ2330
+% Assignment 3 for Project 1 in EQ2330
 % Fall Term 2016
 % Course EQ2330 Image and Video Processing
 % Project 1

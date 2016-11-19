@@ -33,11 +33,8 @@ tSize = size(gTapered);
 G = fft2(gTapered, tSize(1), tSize(2));
 H = fft2(h, tSize(1), tSize(2));
 
-% The exact value for K is given by K = sigma2/var(f). Approximate var(f)
-% by var(g)/4 which would be correct in case g has a gaussian distribution
-udvar = 1/12 * (255)^2;
-tdvar = 1/18*( 255^2 +128^2 -128*255);
-K =  2*sigma2 / tdvar;%var(double(g(:)));
+% The exact value for K is given by K = sigma2/var(f)
+K =  4*sigma2 / var(double(g(:)));
 
 
 % Calculate Wiener Transfer Function
@@ -53,7 +50,7 @@ fhat = uint8(ifft2(Fhat));
 % Extract only relevant pixels
 off1 = ceil((V+1)/2);
 off2 = ceil((W+1)/2);
-fhat = fhat(off1:M+off1, off2:N+off2);
+fhat = fhat(off1:M+off1-1, off2:N+off2-1);
 
 end
 
