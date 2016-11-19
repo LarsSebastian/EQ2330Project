@@ -10,7 +10,8 @@ clear all;
 
 %% Load Image
 
-g = imread('man512_outoffocus.bmp');
+%g = imread('man512_outoffocus.bmp');
+g = imread('boats512_outoffocus.bmp');
 
 [M,N] = size(g);
 
@@ -21,25 +22,13 @@ h = myblurgen('gaussian', 8);
 noise_var = 0.0833;
 
 
-
-
-
-
 %% Image restoration
- 
-nsr = noise_var/var(double(g(:)));
-f_restored = deconvwnr(g, h, nsr);
+% Restore image with Wiener Filter. The blurred image is edgetapered before
+% being filtered
 
-for i = 1:M
-    for j = 1:N
-        f_restored(i,j) = min(max(f_restored(i,j), 0), 255);
-    end
-end
-
+f_restored = jzlk_wienerFilter(g, h, noise_var);
 
 %% Plots
-
-
 
 fig3 = figure(3);
 subplot(1,2,1);
@@ -49,12 +38,4 @@ title('blured and noisy image');
 subplot(1,2,2);
 imshow(uint8(f_restored));
 title('restored image');
-
-
-
-
-
-
-
-
 

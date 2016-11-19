@@ -3,11 +3,15 @@ function [ fhat ] = jzlk_wienerFilterWithoutTapering( g, h, sigma2 )
 %tapering the edges
 %  FHat(u,v) = 1/H(u,v) * |H(u,v)|^2 / (|H(u,v)|^2+K) G(u,v)
 
-totSize = size(g) + size(h);
+[M,N] = size(g);
+[V,W] = size(h);
+
+% Prevent aliasing due to circular convolution
+g = padarray(g, size(h));
 
 % Make Fourier transforms of same size
-G = fft2(g, totSize(1), totSize(2));
-H = fft2(h, totSize(1), totSize(2));
+G = fft2(g, size(g,1), size(g,2));
+H = fft2(h, size(g,1), size(g,2));
 
 % The exact value for K is given by K = sigma2/var(f). Approximate var(f)
 % by var(g)/2
@@ -24,7 +28,9 @@ Fhat = TransferFcn .* G;
 fhat = ifft2(Fhat);
 
 % Extract only relevant pixels
-fhat = uint8(fhat(1:size(g,1), 1:size(g,2)));
+off1 = ceil((V+1)/2);
+off2 = ceil((W+1)/2);
+fhat = uint8(fhat(off1:M+off1, off2:N+off2));
 
 end
 
