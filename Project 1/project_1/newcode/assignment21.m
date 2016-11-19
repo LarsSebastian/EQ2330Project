@@ -18,7 +18,7 @@ imVec      = orgimg(:);
 % specify bin edges
 figure;
 subplot(2,2,1);
-h = histogram(imVec, 0:256);
+imhist(imVec);
 title(sprintf('Histogram of picture %s', picName'));
 xlabel('Gray level');
 ylabel('# of occurence');
@@ -48,8 +48,8 @@ lcimVec = lcimg(:);
 
 % plot the corresponding histogram
 subplot(2,2,2)
-lch = histogram(lcimVec, 0:256);
-lchvalues = lch.Values;
+imhist(lcimVec);
+lchvalues = imhist(lcimVec);
 title(sprintf('Histogram of low contrast picture %s', picName'));
 xlabel('Gray level');
 ylabel('# of occurence');
@@ -72,8 +72,8 @@ end
 
 % plot the corresponding histogram for the equalized image
 subplot(2,2,3)
-eqh = histogram(eqimg(:), 0:256);
-eqvalues = eqh.Values;
+imhist(eqimg(:));
+eqvalues = imhist(eqimg(:));
 title(sprintf('Histogram of equalized l-c image %s', picName'));
 xlabel('Gray level');
 ylabel('# of occurence');
