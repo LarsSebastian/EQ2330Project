@@ -17,7 +17,7 @@ imVec      = orgimg(:);
 
 % specify bin edges
 figure;
-subplot(2,2,1);
+subplot(1,3,1);
 set(gca,'fontsize',12)
 hist(imVec, [0: 255]);
 title(sprintf('Histogram of picture %s', picName'));
@@ -49,7 +49,7 @@ lcimg = a*orgimg + b;
 lcimVec = lcimg(:);
 
 % plot the corresponding histogram
-subplot(2,2,2)
+subplot(1,3,2)
 set(gca,'fontsize',12)
 hist(lcimVec,  [0: 255]);
 lchvalues = imhist(lcimVec);
@@ -75,7 +75,7 @@ for xx=1:N
 end
 
 % plot the corresponding histogram for the equalized image
-subplot(2,2,3)
+subplot(1,3,3)
 set(gca,'fontsize',12)
 hist(eqimg(:),  [0: 255]);
 eqvalues = hist(eqimg(:), [0: 255]);
