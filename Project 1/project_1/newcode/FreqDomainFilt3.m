@@ -21,6 +21,7 @@ noise_mean = 0;
 noise_var = 0.0833; % Why 32? Maybe 0.0833 instead?
 noise_gaussian = mynoisegen('gaussian', M, N, noise_mean, noise_var);
 
+% linear convolution
 f_blured = conv2(double(f), h, 'same');
 g = f_blured +noise_gaussian;
 
@@ -46,15 +47,9 @@ f_restored_wET = jzlk_wienerFilterWithoutTapering(g,h,noise_var);
 
 
 %% Image restoration
- 
+%  
 % nsr = noise_var/var(double(f(:)));
-% f_restored = deconvwnr(g, h, nsr);
-% 
-% for i = 1:M
-%     for j = 1:N
-%         f_restored(i,j) = min(max(f_restored(i,j), 0), 255);
-%     end
-% end
+% f_restored = uint8(deconvwnr(g, h, nsr));
 
 
 %% Plots
@@ -70,12 +65,13 @@ title('Blurred and Noisy Image');
 
 fig2 = figure(2);
 subplot(1,2,1);
-imshow(f_restored);
-title('Restored Image - Edge Tapering')
+imshow(uint8(g));
+title('Blurred and Noisy Image');
 
 subplot(1,2,2);
-imshow(f_restored_wET)
-title('Restored Image - Without Edge Tapering');
+imshow(f_restored);
+title('Restored Image')
+
 
 fig3 = figure(3);
 subplot(1,2,1);
