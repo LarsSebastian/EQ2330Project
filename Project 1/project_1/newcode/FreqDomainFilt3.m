@@ -74,11 +74,26 @@ title('Restored Image')
 
 
 fig3 = figure(3);
+
+x = -M/2:M/2-1;
+x = x/M;
+y = -N/2:N/2-1;
+y = y/M;
+
 subplot(1,2,1);
-imagesc(fftshift(log(Fmagn)));
+imagesc(x,y,fftshift(log(Fmagn)));
+colormap(jet);
+colorbar
 title('Spectrum of original image');
+xlabel('Normalized frequency wx');
+ylabel('Normalized frequency wy');
+
 
 subplot(1,2,2);
-imagesc(fftshift(log(Gmagn)));
+imagesc(x,y,fftshift(log(Gmagn)));
+colormap(jet);
+colorbar
 title('Spectrum of blured and noisy image');
+xlabel('Normalized frequency wx');
+ylabel('Normalized frequency wy');
 
