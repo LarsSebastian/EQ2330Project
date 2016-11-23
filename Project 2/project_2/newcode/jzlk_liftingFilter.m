@@ -5,23 +5,26 @@ function [ yHighOUT, yLowOUT ] = jzlk_liftingFilter( signalIN, scalingIN)
 % NOT YET FINISHED
 
 % Transfer function coefficients
-PNum = [-1/2 -1/2];
-PDen = [0 1];
-UNum = [1/4 1/4];
-UDen = [1];
+PNum = scalingIN;
+
+% obtain psi by orthonormal filter bank constraints
+l = 1:numel(PNum);
+flip = (-1).^l;
+UNum = flip.*PNum;
+
 
 x = wextend(1, 'ppd', signalIN, numel(signalIN));
 
-loops = 0;
-while PDen(1)==0
-    PDen = PDen(2:end);
-    circshift(x,1);
-    
-    loops = loops+1;
-    if loops>10
-        break;
-    end
-end
+% loops = 0;
+% while PDen(1)==0
+%     PDen = PDen(2:end);
+%     circshift(x,1);
+%     
+%     loops = loops+1;
+%     if loops>10
+%         break;
+%     end
+% end
 
 x2n = x(2:2:end);
 x2n1 = x(1:2:end);
