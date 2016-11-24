@@ -9,6 +9,8 @@ function [ xhat ] = jzlk_ifwtDirect( y, hphi )
 %   Generate h0(n) = g0(-n)
 %   Generate g1(n) = -1^{n+1} h0(n)
 %   Generate h1(n) = g1(-n)
+%
+%   Author: Lars Kuger
 
 [N,M] = size(y);
 

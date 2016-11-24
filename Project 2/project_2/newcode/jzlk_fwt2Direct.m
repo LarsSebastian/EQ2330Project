@@ -4,6 +4,8 @@ function [ y ] = jzlk_fwt2Direct( image, hphi, scale )
 %   hphi    prototype scaling vector
 %   scale   how often is FWT applied
 %   y       transformed image
+%
+%   Author: Lars Kuger
 
 y = double(image);
 

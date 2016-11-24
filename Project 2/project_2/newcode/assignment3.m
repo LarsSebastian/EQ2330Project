@@ -1,23 +1,90 @@
+% Assignment 3 of Project 2
+% EQ2330 Image and Video Processing
+% Fall Term 2016, KTH
+% Authors: Jan Zimmermann, Lars Kuger
+
 load coeffs
 
 
-%% Testing if 1D FWT works
-x = [   0 1 1 0 0.5 0.7 0 0.3;
-        1 2 0 6 4   7   8 3 ]';
+%% Measure PSNR
 
-y = jzlk_fwtDirect(x, db4);
+images = {'harbour512x512.tif', 'boats512x512.tif', 'peppers512x512.tif'};
 
-xhat = jzlk_ifwtDirect(y,db4);
+nrimg = size(images,2);
 
-diff = x - xhat;
+d = zeros(10,nrimg); % distortion
+MSEcoef = zeros(10,nrimg);
+PSNR = zeros(10,nrimg); % Peak Signal to Noise Ratio
+stepsize = zeros(10,1); % quantizer stepsize
+
+for jj=1:nrimg
+    image = imread(images{jj});
+    
+    % Without quantization
+    optcoef = jzlk_fwt2Direct(image, db4, scale);
+    
+    % With quantization
+    for ii=0:9
+        delta = 2^ii;
+        stepsize(ii+1) = delta;
+        ynew = jzlk_fwt2Direct(image, db4, scale);
+        ynew = jzlk_quantize(ynew,delta);
+        imagenew = jzlk_ifwt2Direct(ynew, db4, scale);
+        
+        d(ii+1,jj) = sum(sum((imagenew-image).^2))/numel(image);
+        MSEcoef(ii+1,jj) = sum(sum((optcoef-ynew).^2))/numel(optcoef);
+        PSNR(ii+1,jj) = 10*log10(255^2./d(ii+1,jj));
+    end
+end
 
 
-%% Testing if 2D FWT works
-image = imread('harbour512x512.tif');
-scale = 4;
-ynew = jzlk_fwt2Direct(image, haar, scale);
-imagenew = jzlk_ifwt2Direct(ynew, haar, scale);
+%% Plots
+
+linetypes = {'--o','-.x', '-*'};
 figure;
-imshow(uint8(ynew))
+for jj=1:nrimg
+    semilogx(stepsize,PSNR(:,jj), linetypes{jj});
+    hold on;
+end
+grid on;
+title('Lossy image compression');
+xlabel('Quantizer step-size');
+xlim([min(stepsize) max(stepsize)]);
+xticks(stepsize);
+xticklabels(stepsize);
+ylabel('PSNR [dB]');
+legend(images);
+
+
+
+
+
 figure;
-imshow(imagenew);
+
+subplot(1,2,1);
+for jj=1:nrimg
+    semilogx(stepsize,d(:,jj), linetypes{jj});
+    hold on;
+end
+grid on;
+title('Lossy image compression');
+xlabel('Quantizer step-size');
+xlim([min(stepsize) max(stepsize)]);
+xticks(stepsize);
+xticklabels(stepsize);
+ylabel('Distortion');
+legend(images);
+
+subplot(1,2,2);
+for jj=1:nrimg
+    semilogx(stepsize,MSEcoef(:,jj), linetypes{jj});
+    hold on;
+end
+grid on;
+title('Lossy image compression');
+xlabel('Quantizer step-size');
+xlim([min(stepsize) max(stepsize)]);
+xticks(stepsize);
+xticklabels(stepsize);
+ylabel('MSE FWT Coefficients');
+legend(images);

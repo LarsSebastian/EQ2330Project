@@ -4,6 +4,8 @@ function [ imagehat ] = jzlk_ifwt2Direct( y, hphi, scale )
 %   hphi    prototype scaling vector
 %   scale   how often was FWT applied
 %   image   reconstructed image
+%
+%   Author: Lars Kuger
 
 xhat = y;
 

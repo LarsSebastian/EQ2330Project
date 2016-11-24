@@ -11,6 +11,8 @@ function [ y ] = jzlk_fwtDirect( x, hphi )
 %   Generate h0(n) = g0(-n)
 %   Generate g1(n) = -1^{n+1} h0(n)
 %   Generate h1(n) = g1(-n)
+%
+%   Author: Lars Kuger
 
 % number rows, number columns
 [N, M] = size(x);
