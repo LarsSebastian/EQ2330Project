@@ -10,6 +10,8 @@ function [ y ] = jzlk_fwt2Direct( image, hphi, scale )
 y = double(image);
 
 for ii=1:scale
+    
+    %Extract relevant part 
     midx1 = floor(1/2^(ii-1)*size(image,1));
     midx2 = floor(1/2^(ii-1)*size(image,2));
     imagePart = y(1:midx1, 1:midx2);
@@ -20,6 +22,7 @@ for ii=1:scale
     %Now along columns
     yPart = jzlk_fwtDirect(yRPart, hphi);
     
+    %Replace the old image part with the wavelet coefficients
     y(1:midx1, 1:midx2) = yPart;
 end
 

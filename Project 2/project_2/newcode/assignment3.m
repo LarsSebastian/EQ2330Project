@@ -3,37 +3,61 @@
 % Fall Term 2016, KTH
 % Authors: Jan Zimmermann, Lars Kuger
 
+% Load different filter banks/wavelet functions
 load coeffs
 
+% the larger the scale, the fewer bits/pixel are required for lossless
+% transmission
+scale = 2;
 
 %% Measure PSNR
 
+% images to use for analysis
 images = {'harbour512x512.tif', 'boats512x512.tif', 'peppers512x512.tif'};
-
 nrimg = size(images,2);
 
-d = zeros(10,nrimg); % distortion
-MSEcoef = zeros(10,nrimg);
-PSNR = zeros(10,nrimg); % Peak Signal to Noise Ratio
-stepsize = zeros(10,1); % quantizer stepsize
+% stepsize 2^exp. Note that for very small steps or high scales, the PSNR 
+% will eventually diverge to infinity, e.g. lossless compression
+expmin = -5;
+expmax = 9;
+steps = expmax-expmin;
 
+% initialize the arrays
+d = zeros(steps,nrimg);         % distortion
+MSEcoef = zeros(steps,nrimg);   % Mean Square Error in frequency domain
+PSNR = zeros(steps,nrimg);      % Peak Signal to Noise Ratio
+rate = zeros(steps,nrimg);      % rate in bits/pixel
+stepsize = zeros(steps,1);      % quantizer stepsize
+
+% do this for all images
 for jj=1:nrimg
     image = imread(images{jj});
     
-    % Without quantization
+    % Coefficients without quantization
     optcoef = jzlk_fwt2Direct(image, db4, scale);
     
     % With quantization
-    for ii=0:9
+    for ii=expmin:expmax
+        % stepsize
         delta = 2^ii;
-        stepsize(ii+1) = delta;
+        stepsize(ii-expmin+1) = delta;
+        
+        % 2D FWT
         ynew = jzlk_fwt2Direct(image, db4, scale);
+        
+        % Quantize coefficients
         ynew = jzlk_quantize(ynew,delta);
+        
+        % Calculate entropy (optimal rate)
+        rate(ii-expmin+1,jj) = jzlk_fwtRate(ynew, scale);
+        
+        % 2D IFWT
         imagenew = jzlk_ifwt2Direct(ynew, db4, scale);
         
-        d(ii+1,jj) = sum(sum((imagenew-image).^2))/numel(image);
-        MSEcoef(ii+1,jj) = sum(sum((optcoef-ynew).^2))/numel(optcoef);
-        PSNR(ii+1,jj) = 10*log10(255^2./d(ii+1,jj));
+        % Save Distortion, MSE for wavelet coefficients and PSNR
+        d(ii-expmin+1,jj) = sum(sum((imagenew-image).^2))/numel(image);
+        MSEcoef(ii-expmin+1,jj) = sum(sum((optcoef-ynew).^2))/numel(optcoef);
+        PSNR(ii-expmin+1,jj) = 10*log10(255^2./d(ii-expmin+1,jj));
     end
 end
 
@@ -42,6 +66,9 @@ end
 
 linetypes = {'--o','-.x', '-*'};
 figure;
+
+% plot PSNR vs stepsize
+subplot(1,2,1);
 for jj=1:nrimg
     semilogx(stepsize,PSNR(:,jj), linetypes{jj});
     hold on;
@@ -55,12 +82,26 @@ xticklabels(stepsize);
 ylabel('PSNR [dB]');
 legend(images);
 
-
+% plot PSNR vs rate
+subplot(1,2,2);
+for jj=1:nrimg
+    plot(rate(:,jj),PSNR(:,jj), linetypes{jj});
+    hold on;
+end
+grid on;
+title('Lossy image compression');
+xlabel('Optimum Rate [bits/pixel]');
+%xlim([min(rate(:,1)) max(rate(:,jj)]);
+%xticks(rate(:,1));
+%xticklabels(rate(:,jj));
+ylabel('PSNR [dB]');
+legend(images, 'Location', 'northwest');
 
 
 
 figure;
 
+% plot distortion vs stepsize
 subplot(1,2,1);
 for jj=1:nrimg
     semilogx(stepsize,d(:,jj), linetypes{jj});
@@ -73,9 +114,10 @@ xlim([min(stepsize) max(stepsize)]);
 xticks(stepsize);
 xticklabels(stepsize);
 ylabel('Distortion');
-legend(images);
+legend(images, 'Location', 'northwest');
 
 subplot(1,2,2);
+% plot MSEcoef vs stepsize
 for jj=1:nrimg
     semilogx(stepsize,MSEcoef(:,jj), linetypes{jj});
     hold on;
@@ -87,4 +129,4 @@ xlim([min(stepsize) max(stepsize)]);
 xticks(stepsize);
 xticklabels(stepsize);
 ylabel('MSE FWT Coefficients');
-legend(images);
+legend(images, 'Location', 'northwest');
