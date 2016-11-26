@@ -26,7 +26,8 @@ noise_var = 0.0833;
 % Restore image with Wiener Filter. The blurred image is edgetapered before
 % being filtered
 
-f_restored = jzlk_wienerFilter(g, h, noise_var);
+%f_restored = jzlk_wienerFilter(g, h, noise_var);
+f_restored = jzlk_wienerFilterWithoutTapering(g, h, noise_var);
 
 %% Plots
 

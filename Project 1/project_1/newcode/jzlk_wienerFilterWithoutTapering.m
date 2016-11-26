@@ -15,7 +15,7 @@ H = fft2(h, size(g,1), size(g,2));
 
 % The exact value for K is given by K = sigma2/var(f). Approximate var(f)
 % by var(g)/2
-K = 2* sigma2 / var(g(:));
+K = 2* sigma2 / var(double(g(:)));
 
 % Calculate Wiener Transfer Function
 H2 = abs(H).^2;
