@@ -93,7 +93,7 @@ for u = 1:length(delta)
                     coeff_vec = [coeff_vec I8_dctquant{i,j}(k,l)];
                 end
             end
-            EntropyMat(k,l) = entropy(coeff_vec);
+            EntropyMat(k,l) = jzlk_entropy(coeff_vec);
         end
     end
 

@@ -57,7 +57,7 @@ for jj=1:nrimg
         % Save Distortion, MSE for wavelet coefficients and PSNR
         d(ii-expmin+1,jj) = sum(sum((imagenew-image).^2))/numel(image);
         MSEcoef(ii-expmin+1,jj) = sum(sum((optcoef-ynew).^2))/numel(optcoef);
-        PSNR(ii-expmin+1,jj) = 10*log10(255^2./d(ii-expmin+1,jj));
+        PSNR(ii-expmin+1,jj) = 10*log10(255^2./MSEcoef(ii-expmin+1,jj));
     end
 end
 
