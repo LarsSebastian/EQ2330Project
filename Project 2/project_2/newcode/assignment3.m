@@ -8,7 +8,7 @@ load coeffs
 
 % the larger the scale, the fewer bits/pixel are required for lossless
 % transmission
-scale = 2;
+scale = 1;
 
 %% Measure PSNR
 
@@ -18,7 +18,7 @@ nrimg = size(images,2);
 
 % stepsize 2^exp. Note that for very small steps or high scales, the PSNR 
 % will eventually diverge to infinity, e.g. lossless compression
-expmin = -5;
+expmin = 0;
 expmax = 9;
 steps = expmax-expmin;
 
@@ -61,6 +61,15 @@ for jj=1:nrimg
     end
 end
 
+% In order to get one PSNR-rate curve, interpolate PSNR in non-db
+nrate = linspace(max(min(rate)), min(max(rate)), 10);
+PSNRnondb = 10.^(PSNR./10);
+PSNRnondbinterp = zeros(size(PSNRnondb));
+PSNRnondbinterp(:,1) = interp1(rate(:,1), PSNRnondb(:,1), nrate, 'linear');
+PSNRnondbinterp(:,2) = interp1(rate(:,2), PSNRnondb(:,2), nrate, 'linear');
+PSNRnondbinterp(:,3) = interp1(rate(:,3), PSNRnondb(:,3), nrate, 'linear');
+PSNRavg = 10*log10(mean(PSNRnondbinterp')');
+
 
 %% Plots
 
@@ -70,8 +79,8 @@ figure;
 % plot PSNR vs stepsize
 subplot(1,2,1);
 for jj=1:nrimg
-    semilogx(stepsize,PSNR(:,jj), linetypes{jj});
-    hold on;
+   semilogx(stepsize,PSNR(:,jj), linetypes{jj});
+   hold on;
 end
 grid on;
 title('Lossy image compression');
@@ -88,14 +97,16 @@ for jj=1:nrimg
     plot(rate(:,jj),PSNR(:,jj), linetypes{jj});
     hold on;
 end
+semilogx(nrate, PSNRavg, 'LineWidth',2);
 grid on;
 title('Lossy image compression');
 xlabel('Optimum Rate [bits/pixel]');
 %xlim([min(rate(:,1)) max(rate(:,jj)]);
-%xticks(rate(:,1));
-%xticklabels(rate(:,jj));
+%xticks(nrate);
+%xticklabels(nrate);
 ylabel('PSNR [dB]');
-legend(images, 'Location', 'northwest');
+imgavg = {'harbour512x512.tif', 'boats512x512.tif', 'peppers512x512.tif', 'Average'};
+legend(imgavg, 'Location', 'northwest');
 
 
 
@@ -104,15 +115,15 @@ figure;
 % plot distortion vs stepsize
 subplot(1,2,1);
 for jj=1:nrimg
-    semilogx(stepsize,d(:,jj), linetypes{jj});
+    plot(rate(:,jj),d(:,jj), linetypes{jj});
     hold on;
 end
 grid on;
 title('Lossy image compression');
-xlabel('Quantizer step-size');
-xlim([min(stepsize) max(stepsize)]);
-xticks(stepsize);
-xticklabels(stepsize);
+xlabel('Rate');
+%xlim([min(stepsize) max(stepsize)]);
+%xticks(stepsize);
+%xticklabels(stepsize);
 ylabel('Distortion');
 legend(images, 'Location', 'northwest');
 

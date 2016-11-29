@@ -50,13 +50,13 @@ for i = 1:M/8
     end
 end
 
-% mat = [-10:1:10];
-% 
-% matquant = jzlk_MatQuant(mat, 2^3);
-% 
-% fig1 = figure(1);
-% plot(mat, matquant, '*');
-% grid on;
+mat = [-10:1:10];
+
+matquant = jzlk_MatQuant(mat, 2^3);
+
+fig1 = figure(1);
+plot(mat, matquant, '*');
+grid on;
 
 
 
