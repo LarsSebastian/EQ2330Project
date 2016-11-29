@@ -44,9 +44,6 @@ H0= repmat(fft(h0,N),1,M);
 yHigh = ifft(X.*H1);
 yLow  = ifft(X.*H0);
 
-%yHigh = circshift(yHigh, 1-L, 1); %shift along columns
-%yLow = circshift(yLow, 1-L, 1); %shift along columns
-
 y = [yLow(1:2:N,:); yHigh(1:2:N,:)];
 
 end

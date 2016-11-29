@@ -8,13 +8,18 @@ load coeffs
 
 % the larger the scale, the fewer bits/pixel are required for lossless
 % transmission
-scale = 4;
+scale = 1;
 
 % Plot image with scale 4
 image = imread('harbour512x512.tif');
 optcoef = jzlk_fwt2Direct(image, db4, scale);
 figure;
 imshow(uint8(optcoef));
+imagehat = jzlk_ifwt2Direct(optcoef,db4,scale);
+figure;
+imshow(uint8(imagehat));
+reconstructionErr = sum(sum((image-imagehat).^2));
+fprintf('The reconstruction error is %.10f.\n', reconstructionErr);
 
 %% Measure PSNR
 scale = 1;
