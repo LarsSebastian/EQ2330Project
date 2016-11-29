@@ -13,7 +13,6 @@ function [ xhat ] = jzlk_ifwtDirect( y, hphi )
 %   Author: Lars Kuger
 
 [N,M] = size(y);
-
 K = numel(hphi);
 
 % Generate filters
@@ -44,7 +43,9 @@ xLow = ifft(YL.*G0);
 
 xhat = xHigh + xLow;
 
-xhat = circshift(xhat, N-K+1, 1); %shift along columns
+xhat = circshift(xhat, 1-K, 1); %shift along columns
+
+xhat = xhat(1:N, 1:M);
 
 end
 

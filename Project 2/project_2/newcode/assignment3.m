@@ -8,9 +8,16 @@ load coeffs
 
 % the larger the scale, the fewer bits/pixel are required for lossless
 % transmission
-scale = 1;
+scale = 4;
+
+% Plot image with scale 4
+image = imread('harbour512x512.tif');
+optcoef = jzlk_fwt2Direct(image, db4, scale);
+figure;
+imshow(uint8(optcoef));
 
 %% Measure PSNR
+scale = 1;
 
 % images to use for analysis
 images = {'harbour512x512.tif', 'boats512x512.tif', 'peppers512x512.tif'};
@@ -77,67 +84,68 @@ linetypes = {'--o','-.x', '-*'};
 figure;
 
 % plot PSNR vs stepsize
-subplot(1,2,1);
-for jj=1:nrimg
-   semilogx(stepsize,PSNR(:,jj), linetypes{jj});
-   hold on;
-end
-grid on;
-title('Lossy image compression');
-xlabel('Quantizer step-size');
-xlim([min(stepsize) max(stepsize)]);
-xticks(stepsize);
-xticklabels(stepsize);
-ylabel('PSNR [dB]');
-legend(images);
+% subplot(1,2,1);
+% for jj=1:nrimg
+%    semilogx(stepsize,PSNR(:,jj), linetypes{jj});
+%    hold on;
+% end
+% grid on;
+% title('Lossy image compression');
+% xlabel('Quantizer step-size');
+% xlim([min(stepsize) max(stepsize)]);
+% xticks(stepsize);
+% xticklabels(stepsize);
+% ylabel('PSNR [dB]');
+% legend(images);
 
 % plot PSNR vs rate
-subplot(1,2,2);
-for jj=1:nrimg
-    plot(rate(:,jj),PSNR(:,jj), linetypes{jj});
-    hold on;
-end
-semilogx(nrate, PSNRavg, 'LineWidth',2);
+% subplot(1,2,2);
+% for jj=1:nrimg
+%     plot(rate(:,jj),PSNR(:,jj), linetypes{jj});
+%     hold on;
+% end
+plot(nrate, PSNRavg, 'LineWidth',2);
 grid on;
-title('Lossy image compression');
+title(sprintf('Lossy image compression, Scale=%d', scale));
 xlabel('Optimum Rate [bits/pixel]');
 %xlim([min(rate(:,1)) max(rate(:,jj)]);
 %xticks(nrate);
 %xticklabels(nrate);
 ylabel('PSNR [dB]');
-imgavg = {'harbour512x512.tif', 'boats512x512.tif', 'peppers512x512.tif', 'Average'};
-legend(imgavg, 'Location', 'northwest');
+%imgavg = {'harbour512x512.tif', 'boats512x512.tif', 'peppers512x512.tif', 'Average'};
+%legend(imgavg, 'Location', 'northwest');
+legend('Average of 3 images','Location', 'northwest');
 
 
 
-figure;
-
-% plot distortion vs stepsize
-subplot(1,2,1);
-for jj=1:nrimg
-    plot(rate(:,jj),d(:,jj), linetypes{jj});
-    hold on;
-end
-grid on;
-title('Lossy image compression');
-xlabel('Rate');
-%xlim([min(stepsize) max(stepsize)]);
-%xticks(stepsize);
-%xticklabels(stepsize);
-ylabel('Distortion');
-legend(images, 'Location', 'northwest');
-
-subplot(1,2,2);
-% plot MSEcoef vs stepsize
-for jj=1:nrimg
-    semilogx(stepsize,MSEcoef(:,jj), linetypes{jj});
-    hold on;
-end
-grid on;
-title('Lossy image compression');
-xlabel('Quantizer step-size');
-xlim([min(stepsize) max(stepsize)]);
-xticks(stepsize);
-xticklabels(stepsize);
-ylabel('MSE FWT Coefficients');
-legend(images, 'Location', 'northwest');
+% figure;
+% 
+% % plot distortion vs stepsize
+% subplot(1,2,1);
+% for jj=1:nrimg
+%     plot(rate(:,jj),d(:,jj), linetypes{jj});
+%     hold on;
+% end
+% grid on;
+% title('Lossy image compression');
+% xlabel('Rate');
+% %xlim([min(stepsize) max(stepsize)]);
+% %xticks(stepsize);
+% %xticklabels(stepsize);
+% ylabel('Distortion');
+% legend(images, 'Location', 'northwest');
+% 
+% subplot(1,2,2);
+% % plot MSEcoef vs stepsize
+% for jj=1:nrimg
+%     semilogx(stepsize,MSEcoef(:,jj), linetypes{jj});
+%     hold on;
+% end
+% grid on;
+% title('Lossy image compression');
+% xlabel('Quantizer step-size');
+% xlim([min(stepsize) max(stepsize)]);
+% xticks(stepsize);
+% xticklabels(stepsize);
+% ylabel('MSE FWT Coefficients');
+% legend(images, 'Location', 'northwest');
