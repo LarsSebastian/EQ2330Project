@@ -6,9 +6,11 @@
 % Load different filter banks/wavelet functions
 load coeffs
 
-% the larger the scale, the fewer bits/pixel are required for lossless
+%% Plot FWT coefficients with scale 4 for report
+
+% the larger the scale, the fewer bits/pixel are required for better
 % transmission
-scale = 1;
+scale = 4;
 
 % Plot image with scale 4
 image = imread('harbour512x512.tif');
@@ -16,6 +18,7 @@ optcoef = jzlk_fwt2Direct(image, db4, scale);
 figure;
 imshow(uint8(optcoef));
 imagehat = jzlk_ifwt2Direct(optcoef,db4,scale);
+title(sprintf('FWT Coefficients of harbour512.512.tif, scale=%d', scale));
 figure;
 imshow(uint8(imagehat));
 reconstructionErr = sum(sum((image-imagehat).^2));
@@ -37,7 +40,10 @@ steps = expmax-expmin;
 % initialize the arrays
 d = zeros(steps,nrimg);         % distortion
 MSEcoef = zeros(steps,nrimg);   % Mean Square Error in frequency domain
-PSNR = zeros(steps,nrimg);      % Peak Signal to Noise Ratio
+PSNR = zeros(steps,nrimg);      % Peak Signal to Noise Ratio wrt MSE coef
+PSNRdis = zeros(steps,nrimg);      % Peak Signal to Noise Ratio wrt distortion
+PSNRnofwt = zeros(steps,nrimg); % No FWT, quantization only
+ratenofwt = zeros(steps,nrimg);
 rate = zeros(steps,nrimg);      % rate in bits/pixel
 stepsize = zeros(steps,1);      % quantizer stepsize
 
@@ -48,11 +54,15 @@ for jj=1:nrimg
     % Coefficients without quantization
     optcoef = jzlk_fwt2Direct(image, db4, scale);
     
+    
     % With quantization
     for ii=expmin:expmax
+        
+        tmpidx = ii-expmin+1;
+        
         % stepsize
         delta = 2^ii;
-        stepsize(ii-expmin+1) = delta;
+        stepsize(tmpidx) = delta;
         
         % 2D FWT
         ynew = jzlk_fwt2Direct(image, db4, scale);
@@ -61,15 +71,22 @@ for jj=1:nrimg
         ynew = jzlk_quantize(ynew,delta);
         
         % Calculate entropy (optimal rate)
-        rate(ii-expmin+1,jj) = jzlk_fwtRate(ynew, scale);
+        rate(tmpidx,jj) = jzlk_fwtRate(ynew, scale);
         
         % 2D IFWT
         imagenew = jzlk_ifwt2Direct(ynew, db4, scale);
         
         % Save Distortion, MSE for wavelet coefficients and PSNR
-        d(ii-expmin+1,jj) = sum(sum((imagenew-image).^2))/numel(image);
-        MSEcoef(ii-expmin+1,jj) = sum(sum((optcoef-ynew).^2))/numel(optcoef);
-        PSNR(ii-expmin+1,jj) = 10*log10(255^2./MSEcoef(ii-expmin+1,jj));
+        d(tmpidx,jj) = sum(sum((imagenew-image).^2))/numel(image);
+        MSEcoef(tmpidx,jj) = sum(sum((optcoef-ynew).^2))/numel(optcoef);
+        PSNR(tmpidx,jj) = 10*log10(255^2./MSEcoef(tmpidx,jj));
+        PSNRdis(tmpidx,jj) = 10*log10(255^2./d(tmpidx,jj));
+        
+        % PSNR without fwt
+        tmpimg = uint8(jzlk_quantize(double(image),delta));
+        tmpdis = sum(sum(abs(tmpimg-image).^2))/numel(image);
+        PSNRnofwt(tmpidx,jj) = 10*log10(255^2./tmpdis);
+        ratenofwt(tmpidx,jj) = jzlk_entropy(tmpimg);
     end
 end
 
@@ -82,75 +99,39 @@ PSNRnondbinterp(:,2) = interp1(rate(:,2), PSNRnondb(:,2), nrate, 'linear');
 PSNRnondbinterp(:,3) = interp1(rate(:,3), PSNRnondb(:,3), nrate, 'linear');
 PSNRavg = 10*log10(mean(PSNRnondbinterp')');
 
+% PSNR wrt distortion
+PSNRdisnondb = 10.^(PSNRdis./10);
+PSNRdisnondbinterp = zeros(size(PSNRdisnondb));
+PSNRdisnondbinterp(:,1) = interp1(rate(:,1), PSNRdisnondb(:,1), nrate, 'linear');
+PSNRdisnondbinterp(:,2) = interp1(rate(:,2), PSNRdisnondb(:,2), nrate, 'linear');
+PSNRdisnondbinterp(:,3) = interp1(rate(:,3), PSNRdisnondb(:,3), nrate, 'linear');
+PSNRdisavg = 10*log10(mean(PSNRdisnondbinterp')');
+
+% PSNR for quantized image without FWT
+idx = isinf(PSNRnofwt);
+PSNRnofwt(idx) = []; % remove elements that are infinite
+PSNRnofwt = reshape(PSNRnofwt, [], 3);
+ratenofwt(idx) = [];
+ratenofwt = reshape(ratenofwt, [], 3);
+PSNRnofwtnondb = 10.^((PSNRnofwt)./10);
+PSNRnofwtnondbinterp = zeros(length(nrate),size(PSNRnofwtnondb,2));
+PSNRnofwtnondbinterp(:,1) = interp1(ratenofwt(:,1), PSNRnofwtnondb(:,1), nrate, 'linear');
+PSNRnofwtnondbinterp(:,2) = interp1(ratenofwt(:,2), PSNRnofwtnondb(:,2), nrate, 'linear');
+PSNRnofwtnondbinterp(:,3) = interp1(ratenofwt(:,3), PSNRnofwtnondb(:,3), nrate, 'linear');
+PSNRnofwtavg = 10*log10(mean(PSNRnofwtnondbinterp')');
+
+
 
 %% Plots
 
-linetypes = {'--o','-.x', '-*'};
 figure;
 
-% plot PSNR vs stepsize
-% subplot(1,2,1);
-% for jj=1:nrimg
-%    semilogx(stepsize,PSNR(:,jj), linetypes{jj});
-%    hold on;
-% end
-% grid on;
-% title('Lossy image compression');
-% xlabel('Quantizer step-size');
-% xlim([min(stepsize) max(stepsize)]);
-% xticks(stepsize);
-% xticklabels(stepsize);
-% ylabel('PSNR [dB]');
-% legend(images);
-
-% plot PSNR vs rate
-% subplot(1,2,2);
-% for jj=1:nrimg
-%     plot(rate(:,jj),PSNR(:,jj), linetypes{jj});
-%     hold on;
-% end
-plot(nrate, PSNRavg, 'LineWidth',2);
+plot(nrate, PSNRavg, '-','LineWidth',2);
 grid on;
-title(sprintf('Lossy image compression, Scale=%d', scale));
+hold on;
+plot(nrate, PSNRdisavg, 'r--', 'LineWidth', 2);
+plot(nrate, PSNRnofwtavg, 'k-.', 'LineWidth',2);
+title(sprintf('FWT Lossy image compression, Scale=%d', scale));
 xlabel('Optimum Rate [bits/pixel]');
-%xlim([min(rate(:,1)) max(rate(:,jj)]);
-%xticks(nrate);
-%xticklabels(nrate);
 ylabel('PSNR [dB]');
-%imgavg = {'harbour512x512.tif', 'boats512x512.tif', 'peppers512x512.tif', 'Average'};
-%legend(imgavg, 'Location', 'northwest');
-legend('Average of 3 images','Location', 'northwest');
-
-
-
-% figure;
-% 
-% % plot distortion vs stepsize
-% subplot(1,2,1);
-% for jj=1:nrimg
-%     plot(rate(:,jj),d(:,jj), linetypes{jj});
-%     hold on;
-% end
-% grid on;
-% title('Lossy image compression');
-% xlabel('Rate');
-% %xlim([min(stepsize) max(stepsize)]);
-% %xticks(stepsize);
-% %xticklabels(stepsize);
-% ylabel('Distortion');
-% legend(images, 'Location', 'northwest');
-% 
-% subplot(1,2,2);
-% % plot MSEcoef vs stepsize
-% for jj=1:nrimg
-%     semilogx(stepsize,MSEcoef(:,jj), linetypes{jj});
-%     hold on;
-% end
-% grid on;
-% title('Lossy image compression');
-% xlabel('Quantizer step-size');
-% xlim([min(stepsize) max(stepsize)]);
-% xticks(stepsize);
-% xticklabels(stepsize);
-% ylabel('MSE FWT Coefficients');
-% legend(images, 'Location', 'northwest');
+legend({'PSNR wrt coef MSE','PSNR wrt distortion', 'PSNR no FWT' },'Location', 'northwest');
