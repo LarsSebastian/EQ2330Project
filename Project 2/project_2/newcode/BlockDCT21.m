@@ -18,8 +18,6 @@ if mod(M,8) ~= 0 || mod(N,8) ~=0
     disp('Image not divisible by 8');
 end
 
-% figure;
-% imshow(I);
 
 %% separate images into blocks of 8x8
 I8 = cell(M/8, N/8);
@@ -50,13 +48,18 @@ for i = 1:M/8
     end
 end
 
+
+%% Plot Quantization Function
 mat = [-10:1:10];
 
-matquant = jzlk_MatQuant(mat, 2^3);
+matquant = jzlk_quantize(mat, 2^2);
 
 fig1 = figure(1);
-plot(mat, matquant, '*');
+plot(mat, matquant, '*', 'LineWidth',2);
 grid on;
+xlabel('x');
+ylabel('Q(x)');
+title(sprintf('Graph of quantizer function'));
 
 
 
