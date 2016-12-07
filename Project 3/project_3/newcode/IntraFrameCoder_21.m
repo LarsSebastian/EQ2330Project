@@ -1,4 +1,4 @@
-% Assignment 1 of Project 3
+% Assignment 2.1 of Project 3
 % EQ2330 Image and Video Processing
 % Fall Term 2016, KTH
 % Authors: Jan Zimmermann, Lars Kuger
@@ -8,29 +8,24 @@ clear all;
 clc;
 %% load video
 
-file_name = 'mother-daughter_qcif.yuv';
-%file_name = 'foreman_qcif.yuv';
+%file_name = 'mother-daughter_qcif.yuv';
+file_name = 'foreman_qcif.yuv';
 frame_size = [176 144]; %taken from example 
 
 V = yuv_import_y(file_name,frame_size,50);
 
-delta = [2^3, 2^4, 2^5, 2^6];
+%delta = [2^3, 2^4, 2^5, 2^6];
+delta = 2^4;
 
 %% seperate all frames into blocks of 16 then blocks of 8, apply dct2 and quantization
 
 %Initialize all Matrices
-Vblk16 = cell(length(V),1);
-Vblc16_8 = cell(length(V),1);
-Vblc16_8_dct = cell(length(V),1);
-Vblc16_8_dct_quant = cell(length(V),1);
-Vblc16_dct_quant = cell(length(V),1);
-V_quant = cell(length(V), 1);
-Vblc16_quant = cell(length(V),1);
-Vblc16_8_quant = cell(length(V), 1);
 
-% EntropyMat = cell(length(V),1);
-% R = zeros(length(V), length(delta));
-% PSNR = zeros(length(V),1);
+Vblk16 = cell(length(V), 1);
+R = cell(length(delta), length(V));
+PSNR = cell(length(delta), length(V));
+
+
 
 for i = 1:length(delta)  % loop over step sizes of quantizer
     for j = 1:length(V) % loop over all frames

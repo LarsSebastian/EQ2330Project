@@ -1,4 +1,4 @@
-function [ R, PSNR  ] = encode_intraframe( frameblk, delta )
+function [ R, PSNR, MSE_blk  ] = encode_intraframe( frameblk, delta )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -15,6 +15,7 @@ frameblk_8_dct_quant = cellfun(@(x) jzlk_quantize(x,delta), frameblk_8_dct, 'Uni
 % resolve 8x8 blocks -->16x16 blocks with dct coefficients (used for entropy calculation)
 frameblk_dct_quant = cell2mat(frameblk_8_dct_quant);
 
+%% resolve 8x8 block --> 16x16 blocks for distortion calculation
 frameblk_dct = cell2mat(frameblk_8_dct);
 
 % %backtransformation into spatial domain after quantization
@@ -35,7 +36,7 @@ end
 
 R = mean(EntropyMat(:)); %rate per frame
 
-MSE_blk = sum(abs((frameblk_dct_quant(:) - frameblk_dct(:))).^2)*1/(16^4);
+MSE_blk = sum(abs((frameblk_dct_quant(:) - frameblk_dct(:))).^2)*1/(16^4); %Parsivals Theorem (correct?)
 PSNR = 10*log10(255^2/MSE_blk);
 
 
