@@ -1,0 +1,142 @@
+% Assignment 2.1 of Project 3
+% EQ2330 Image and Video Processing
+% Fall Term 2016, KTH
+% Authors: Jan Zimmermann, Lars Kuger
+
+%%
+clear all;
+clc;
+%% load video
+
+%file_name = 'mother-daughter_qcif.yuv';
+file_name = 'foreman_qcif.yuv';
+frame_size = [176 144]; %taken from example 
+
+V = yuv_import_y(file_name,frame_size,50);
+
+delta = [2^3, 2^4, 2^5, 2^6];
+%delta = 2^4;
+
+%% seperate all frames into blocks of 16 then blocks of 8, apply dct2 and quantization
+
+%Initialize all Matrices
+
+Vblk16 = cell(length(V), 1);
+Vblk16DCT = cell(length(delta), length(V)); % blocks of 16x16 containing 8x8 DCT coef
+coefFrames = zeros(frame_size(1), frame_size(2), numel(V), numel(delta));
+MSE = cell(length(delta), length(V));
+%R = cell(length(delta), length(V));
+%PSNR = cell(length(delta), length(V));
+
+
+
+for i = 1:length(delta)  % loop over step sizes of quantizer
+    for j = 1:length(V) % loop over all frames
+        j
+        
+        
+        Vblk16{j} = mat2cell(V{j}, repmat(16, 1, frame_size(2)/16), ...
+            repmat(16, 1, frame_size(1)/16)); %divide each frame into blocks of 16x16
+        [M,N] = size(Vblk16{j});
+        
+        for ii = 1:M
+            for jj =1:N
+                [Vblk16DCT{i,j}{ii,jj}, MSE{i,j}(ii,jj)] = ...
+                    encode_intraframe2(Vblk16{j}{ii,jj}, delta(i));
+                %coefFrames((ii-1)*16+1:ii*16,(jj-1)*16+1:jj*16,j,i) = ...
+                %    Vblk16DCT{i,j}{ii,jj};
+            end
+        end
+
+    end
+end
+
+%% rate calculation
+% 
+% coef = zeros(64, 176*144/8^2);
+% 
+% for quantStep=1:numel(delta) % loop over all quantization steps
+%     for frameNo=1:numel(V)  % loop over all frames
+%         for ii=1:8 % ii,jj loop over all coefficients
+%             for jj=1:8
+%                 coef((ii-1)*8+j, :) = coefFrames(ii:8:end, jj:8:end, frameNo,quantStep); 
+%             end
+%         end
+%     end
+% end
+
+% for quantStep=1:numel(delta)
+%     quantCoef = Vblk16DCT(quantStep,:);
+%     noCoefOccurence = 50*frame_size(1)*frame_size(2)/8^2;
+%     coefVec = zeros(64,noCoefOccurence);
+%     for frameNo=1:length(V)
+%         frameQuantCoef = quantCoef{frameNo};
+%         for ii16x16=1:M
+%             for jj16x16=1:N
+%                 block16x16 = frameQuantCoef{ii16x16,jj16x16};
+%                 for coefIdx=1:64
+%                     coefSerial = block16x16(:);
+%                     coefVec(coefIdx, (frameNo-1)*50 = [coefVec block16x16([1, 9], [1, 9])];
+%                 end
+%             end
+%         end
+%     end
+% end
+
+
+
+entropyRate = zeros(64,numel(delta));
+MSEfinal    = zeros(1,numel(delta));
+for quantStep=1:numel(delta)    % loop through all quantization steps
+    quantCoef = Vblk16DCT(quantStep,:);
+    MSEsummands = [];
+    quantMSE = MSE(quantStep,:);
+    for coefIdx = 1:64          % loop through all coefficients of a 8x8
+        coefVec = [];
+        coefIdx
+        for frameNo=1:length(V) % loop through all frames
+            frameQuantCoef = quantCoef{frameNo};
+            frameQuantMSE = quantMSE{frameNo};
+            MSEsummands = [MSEsummands mean(frameQuantMSE(:));];
+            for ii16x16=1:M
+                for jj16x16=1:N
+                    block16x16 = frameQuantCoef{ii16x16,jj16x16};
+                    for ii8x8=1:2
+                        for jj8x8=1:2
+                            block8x8 = block16x16((ii8x8-1)*8+1:ii8x8*8, ...
+                                (jj8x8-1)*8+1:jj8x8*8);
+                            coefSerial = block8x8(:);
+                            coefVec = [coefVec coefSerial(coefIdx)];
+                        end
+                    end
+                end
+            end
+        end
+        entropyRate(coefIdx, quantStep) = jzlk_entropy2(coefVec);
+    end
+    MSEfinal(quantStep) = mean(MSEsummands);
+end
+
+Ratefinal   = mean(entropyRate);
+
+Ratekbps = Ratefinal.*30
+
+%% average PSNR, average rate
+% 
+% %average PSNR
+% PSNRavg(1,1) = mean(PSNR(:,1));
+% PSNRavg(1,2) = mean(PSNR(:,2));
+% PSNRavg(1,3) = mean(PSNR(:,3));
+% PSNRavg(1,4) = mean(PSNR(:,4));
+% 
+% %average rate over all frames * frame rate
+% Ravg(1,1) = mean(R(:, 1))*30;
+% Ravg(1,2) = mean(R(:, 2))*30;
+% Ravg(1,3) = mean(R(:, 3))*30;
+% Ravg(1,4) = mean(R(:, 4))*30;
+% 
+% figure;
+% plot(Ravg, PSNRavg, '+');
+% xlable('average Rate');
+% ylable('average PSNR');
+% 
