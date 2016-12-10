@@ -61,7 +61,9 @@ for t = 1:length(images) %length(images);
 
         %% Calculate Distortion, MSE and PSNR
 
-        D = abs(I- uint8(I_quant)).^2;
+        %D = abs(I- uint8(I_quant)).^2; wrong datatype, will deliver wrong
+        %result
+        D = abs(double(I)-I_quant).^2;
         MSE = sum(D(:))/(M*N);
 
         D_dct = abs(I_dct - I_dctquant).^2;

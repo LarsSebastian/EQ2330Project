@@ -24,7 +24,7 @@ R = cell(length(delta), length(V));
 PSNR = cell(length(delta), length(V));
 
 for i = 1:length(delta)  % loop over step sizes of quantizer
-    lambda = 0.2*delta(i);
+    lambda = 0.2*delta(i)^2; % squared?
     for j = 1:length(V)-1 % loop over all frames, comparison between two frames: -1
         j
         

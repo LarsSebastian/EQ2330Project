@@ -14,8 +14,8 @@ frame_size = [176 144]; %taken from example
 
 V = yuv_import_y(file_name,frame_size,50);
 
-%delta = [2^3, 2^4, 2^5, 2^6];
-delta = 2^4;
+delta = [2^3, 2^4, 2^5, 2^6];
+%delta = 2^4;
 
 %% seperate all frames into blocks of 16 then blocks of 8, apply dct2 and quantization
 
@@ -48,25 +48,25 @@ end
 
 %% average PSNR, average rate
 
-% %average PSNR
-% PSNRavg(1,1) = mean(PSNR(:,1));
-% PSNRavg(1,2) = mean(PSNR(:,2));
-% PSNRavg(1,3) = mean(PSNR(:,3));
-% PSNRavg(1,4) = mean(PSNR(:,4));
-% 
-% %average rate over all frames * frame rate
-% Ravg(1,1) = mean(R(:, 1))*30;
-% Ravg(1,2) = mean(R(:, 2))*30;
-% Ravg(1,3) = mean(R(:, 3))*30;
-% Ravg(1,4) = mean(R(:, 4))*30;
-% 
-% figure;
-% plot(Ravg, PSNRavg, '+');
-% xlable('average Rate');
-% ylable('average PSNR');
-% 
-% 
-% 
-% 
-% 
-%         
+%average PSNR
+PSNRavg(1,1) = mean(PSNR(:,1));
+PSNRavg(1,2) = mean(PSNR(:,2));
+PSNRavg(1,3) = mean(PSNR(:,3));
+PSNRavg(1,4) = mean(PSNR(:,4));
+
+%average rate over all frames * frame rate
+Ravg(1,1) = mean(R(:, 1))*30;
+Ravg(1,2) = mean(R(:, 2))*30;
+Ravg(1,3) = mean(R(:, 3))*30;
+Ravg(1,4) = mean(R(:, 4))*30;
+
+figure;
+plot(Ravg, PSNRavg, '+');
+xlable('average Rate');
+ylable('average PSNR');
+
+
+
+
+
+        

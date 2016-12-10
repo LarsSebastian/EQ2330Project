@@ -4,7 +4,7 @@ function [ entropy ] = jzlk_entropy2( subband )
 
 
 
-x = hist(subband(:), 0:2^8-1);
+x = hist(subband(:), 2*max(abs(subband(:))));
 
 sum1 = sum(x);
 

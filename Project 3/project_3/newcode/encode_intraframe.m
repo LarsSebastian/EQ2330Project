@@ -36,7 +36,7 @@ end
 
 R = mean(EntropyMat(:)); %rate per frame
 
-MSE_blk = sum(abs((frameblk_dct_quant(:) - frameblk_dct(:))).^2)*1/(16^4); %Parsivals Theorem (correct?)
+MSE_blk = sum(abs((frameblk_dct_quant(:) - frameblk_dct(:))).^2)*1/(16^2); %Parsivals Theorem (correct?)
 PSNR = 10*log10(255^2/MSE_blk);
 
 
