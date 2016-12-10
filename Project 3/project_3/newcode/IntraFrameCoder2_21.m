@@ -8,8 +8,8 @@ clear all;
 clc;
 %% load video
 
-%file_name = 'mother-daughter_qcif.yuv';
-file_name = 'foreman_qcif.yuv';
+file_name = 'mother-daughter_qcif.yuv';
+%file_name = 'foreman_qcif.yuv';
 frame_size = [176 144]; %taken from example 
 
 V = yuv_import_y(file_name,frame_size,50);
@@ -52,17 +52,27 @@ end
 
 entropyRate = zeros(64,numel(delta));
 MSEfinal    = zeros(1,numel(delta));
+
+% For each quantization level, take all coefficients at a certain position
+% (i,j) in any 8x8 block, no matter in what frame or where in such a frame.
+% Then calculate the entropy for this i-th coefficient
 for quantStep=1:numel(delta)    % loop through all quantization steps
     quantCoef = Vblk16DCT(quantStep,:);
-    MSEsummands = [];
+    MSEsummands = zeros(50,1);
     quantMSE = MSE(quantStep,:);
+    
     for coefIdx = 1:64          % loop through all coefficients of a 8x8
-        coefVec = [];
+        idx = 1;
+        coefVec = zeros(50*frame_size(1)*frame_size(2)/8^2,1);
         coefIdx
+        
         for frameNo=1:length(V) % loop through all frames
             frameQuantCoef = quantCoef{frameNo};
             frameQuantMSE = quantMSE{frameNo};
-            MSEsummands = [MSEsummands mean(frameQuantMSE(:));];
+            if coefIdx==1
+                % Only add one mean for each frame
+                MSEsummands(frameNo) =  mean(frameQuantMSE(:));
+            end
             for ii16x16=1:M
                 for jj16x16=1:N
                     block16x16 = frameQuantCoef{ii16x16,jj16x16};
@@ -71,7 +81,8 @@ for quantStep=1:numel(delta)    % loop through all quantization steps
                             block8x8 = block16x16((ii8x8-1)*8+1:ii8x8*8, ...
                                 (jj8x8-1)*8+1:jj8x8*8);
                             coefSerial = block8x8(:);
-                            coefVec = [coefVec coefSerial(coefIdx)];
+                            coefVec(idx) = coefSerial(coefIdx);
+                            idx = idx+1;
                         end
                     end
                 end
@@ -91,7 +102,7 @@ PSNR = 10*log10(255^2./MSEfinal);
 % 
 
 figure;
-plot(Ratekbps, PSNR);
+plot(Ratekbps, PSNR, 'LineWidth', 2);
 grid on;
 xlabel('Rate [kbps]');
 ylabel('PSNR [dB]');
