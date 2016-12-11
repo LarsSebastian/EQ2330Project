@@ -8,8 +8,8 @@ clear all;
 clc;
 %% load video
 
-file_name = 'mother-daughter_qcif.yuv';
-%file_name = 'foreman_qcif.yuv';
+%file_name = 'mother-daughter_qcif.yuv';
+file_name = 'foreman_qcif.yuv';
 frame_size = [176 144]; %taken from example 
 
 V = yuv_import_y(file_name,frame_size,50);
@@ -61,9 +61,9 @@ for quantStep=1:numel(delta)    % loop through all quantization steps
     MSEsummands = zeros(50,1);
     quantMSE = MSE(quantStep,:);
     
-    for coefIdx = 1:64          % loop through all coefficients of a 8x8
+    for coefIdx = 1:16^2          % loop through all coefficients of a 16x16
         idx = 1;
-        coefVec = zeros(50*frame_size(1)*frame_size(2)/8^2,1);
+        coefVec = zeros(50*frame_size(1)*frame_size(2)/16^2,1);
         coefIdx
         
         for frameNo=1:length(V) % loop through all frames
@@ -76,15 +76,9 @@ for quantStep=1:numel(delta)    % loop through all quantization steps
             for ii16x16=1:M
                 for jj16x16=1:N
                     block16x16 = frameQuantCoef{ii16x16,jj16x16};
-                    for ii8x8=1:2
-                        for jj8x8=1:2
-                            block8x8 = block16x16((ii8x8-1)*8+1:ii8x8*8, ...
-                                (jj8x8-1)*8+1:jj8x8*8);
-                            coefSerial = block8x8(:);
-                            coefVec(idx) = coefSerial(coefIdx);
-                            idx = idx+1;
-                        end
-                    end
+                    coefSerial = block16x16(:);
+                    coefVec(idx) = coefSerial(coefIdx);
+                    idx = idx + 1;
                 end
             end
         end
