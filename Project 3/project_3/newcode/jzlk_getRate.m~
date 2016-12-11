@@ -1,0 +1,12 @@
+function [ rate ] = jzlk_getRate( DCTcoef, codebooks, quantStep )
+%UNTITLED3 Summary of this function goes here
+%   Detailed explanation goes here
+
+serDCTcoef = DCTcoef(:);
+
+for coefIdx=1:numel(serDCTcoef)
+    codebooks{coefIdx, quantStep}(
+end
+
+end
+

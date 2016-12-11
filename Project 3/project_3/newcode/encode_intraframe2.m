@@ -1,4 +1,5 @@
-function [ frameblk_dct_quant, MSE_blk  ] = encode_intraframe2( frameblk, delta )
+function [ frameblk_dct, frameblk_dct_quant, MSE_blk  ] = ...
+    encode_intraframe2( frameblk, delta )
 %Takes a 16x16 frame, splits it into 4 8x8 blocks, performs DCT, then
 %quantization on the DCT coefficients
 %   Detailed explanation goes here
