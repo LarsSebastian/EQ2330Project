@@ -24,6 +24,7 @@ for t = 1:length(images) %length(images);
         u
         %% Load image
         I = imread(images{t}, 'tif');
+        I = double(I);
 
         [M,N] = size(I);
 
@@ -91,8 +92,8 @@ for t = 1:length(images) %length(images);
         
         %% Calculate Rate, when no transformation is performed, (Copied
 % from Lars Kuger and adjusted)
-        Itmpquant = uint8(jzlk_quantize(double(I),delta(u)));
-        tmpdis = sum(sum(abs(Itmpquant-I).^2))/numel(I);
+        Itmpquant = jzlk_quantize(double(I),delta(u));
+        tmpdis = sum(sum(abs(Itmpquant-double(I)).^2))/numel(I);
         PSNRnodct(u,t) = 10*log10(255^2./tmpdis);
         ratenodct(u,t) = jzlk_entropy2(Itmpquant);
     end
@@ -120,11 +121,12 @@ PSNRnodct(idx) = []; % remove elements that are infinite
 PSNRnodct = reshape(PSNRnodct, [], 3);
 ratenodct(idx) = [];
 ratenodct = reshape(ratenodct, [], 3);
+nrateSpatial = linspace(max(min(ratenodct)), min(max(ratenodct)), 10);
 PSNRnofwtnondb = 10.^((PSNRnodct)./10);
 PSNRnofwtnondbinterp = zeros(length(nrate),size(PSNRnofwtnondb,2));
-PSNRnofwtnondbinterp(:,1) = interp1(ratenodct(:,1), PSNRnofwtnondb(:,1), nrate, 'linear');
-PSNRnofwtnondbinterp(:,2) = interp1(ratenodct(:,2), PSNRnofwtnondb(:,2), nrate, 'linear');
-PSNRnofwtnondbinterp(:,3) = interp1(ratenodct(:,3), PSNRnofwtnondb(:,3), nrate, 'linear');
+PSNRnofwtnondbinterp(:,1) = interp1(ratenodct(:,1), PSNRnofwtnondb(:,1), nrateSpatial, 'linear');
+PSNRnofwtnondbinterp(:,2) = interp1(ratenodct(:,2), PSNRnofwtnondb(:,2), nrateSpatial, 'linear');
+PSNRnofwtnondbinterp(:,3) = interp1(ratenodct(:,3), PSNRnofwtnondb(:,3), nrateSpatial, 'linear');
 PSNRnofwtavg = 10*log10(mean(PSNRnofwtnondbinterp')');
 
 
@@ -153,11 +155,11 @@ plot(nrate, PSNRdisavg);
 
 figure;
 
-plot(nrate, PSNRavg, '-','LineWidth',2);
+plot(nrate, PSNRavg, '-x','LineWidth',2);
 grid on;
 hold on;
-plot(nrate, PSNRdisavg, 'r--', 'LineWidth', 2);
-plot(nrate, PSNRnofwtavg, 'k-.', 'LineWidth',2);
+plot(nrate, PSNRdisavg, 'r--o', 'LineWidth', 2);
+plot(nrateSpatial, PSNRnofwtavg, 'k-.', 'LineWidth',2);
 title(sprintf('DCT Lossy image compression'));
 xlabel('Optimum Rate [bits/pixel]');
 ylabel('PSNR [dB]');

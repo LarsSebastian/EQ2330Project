@@ -23,7 +23,7 @@ for ii=scale:-1:1
     xhat(1:midx1, 1:midx2) = xhatPart;
 end
 
-imagehat = uint8(xhat);
+imagehat = xhat;
 
 end
 

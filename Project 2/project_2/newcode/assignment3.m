@@ -3,6 +3,9 @@
 % Fall Term 2016, KTH
 % Authors: Jan Zimmermann, Lars Kuger
 
+clear all
+
+
 % Load different filter banks/wavelet functions
 load coeffs
 
@@ -13,7 +16,7 @@ load coeffs
 scale = 4;
 
 % Plot image with scale 4
-image = imread('harbour512x512.tif');
+image = double(imread('harbour512x512.tif'));
 optcoef = jzlk_fwt2Direct(image, db4, scale);
 figure;
 imshow(uint8(optcoef));
@@ -50,6 +53,7 @@ stepsize = zeros(steps,1);      % quantizer stepsize
 % do this for all images
 for jj=1:nrimg
     image = imread(images{jj});
+    image = double(image);
     
     % Coefficients without quantization
     optcoef = jzlk_fwt2Direct(image, db4, scale);
@@ -83,7 +87,7 @@ for jj=1:nrimg
         PSNRdis(tmpidx,jj) = 10*log10(255^2./d(tmpidx,jj));
         
         % PSNR without fwt
-        tmpimg = uint8(jzlk_quantize(double(image),delta));
+        tmpimg = jzlk_quantize(double(image),delta);
         tmpdis = sum(sum(abs(tmpimg-image).^2))/numel(image);
         PSNRnofwt(tmpidx,jj) = 10*log10(255^2./tmpdis);
         ratenofwt(tmpidx,jj) = jzlk_entropy(tmpimg);
@@ -113,11 +117,12 @@ PSNRnofwt(idx) = []; % remove elements that are infinite
 PSNRnofwt = reshape(PSNRnofwt, [], 3);
 ratenofwt(idx) = [];
 ratenofwt = reshape(ratenofwt, [], 3);
+nrateSpatial = linspace(max(min(ratenofwt)), min(max(ratenofwt)), 10);
 PSNRnofwtnondb = 10.^((PSNRnofwt)./10);
 PSNRnofwtnondbinterp = zeros(length(nrate),size(PSNRnofwtnondb,2));
-PSNRnofwtnondbinterp(:,1) = interp1(ratenofwt(:,1), PSNRnofwtnondb(:,1), nrate, 'linear');
-PSNRnofwtnondbinterp(:,2) = interp1(ratenofwt(:,2), PSNRnofwtnondb(:,2), nrate, 'linear');
-PSNRnofwtnondbinterp(:,3) = interp1(ratenofwt(:,3), PSNRnofwtnondb(:,3), nrate, 'linear');
+PSNRnofwtnondbinterp(:,1) = interp1(ratenofwt(:,1), PSNRnofwtnondb(:,1), nrateSpatial, 'linear');
+PSNRnofwtnondbinterp(:,2) = interp1(ratenofwt(:,2), PSNRnofwtnondb(:,2), nrateSpatial, 'linear');
+PSNRnofwtnondbinterp(:,3) = interp1(ratenofwt(:,3), PSNRnofwtnondb(:,3), nrateSpatial, 'linear');
 PSNRnofwtavg = 10*log10(mean(PSNRnofwtnondbinterp')');
 
 
@@ -126,11 +131,11 @@ PSNRnofwtavg = 10*log10(mean(PSNRnofwtnondbinterp')');
 
 figure;
 
-plot(nrate, PSNRavg, '-','LineWidth',2);
+plot(nrate, PSNRavg, '-x','LineWidth',2);
 grid on;
 hold on;
-plot(nrate, PSNRdisavg, 'r--', 'LineWidth', 2);
-plot(nrate, PSNRnofwtavg, 'k-.', 'LineWidth',2);
+plot(nrate, PSNRdisavg, 'r--o', 'LineWidth', 2);
+plot(nrateSpatial, PSNRnofwtavg, 'k-.', 'LineWidth',2);
 title(sprintf('FWT Lossy image compression, Scale=%d', scale));
 xlabel('Optimum Rate [bits/pixel]');
 ylabel('PSNR [dB]');
