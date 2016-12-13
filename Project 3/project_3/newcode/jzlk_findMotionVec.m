@@ -32,11 +32,12 @@ end
 
 % find index where distortion is minimal (serial index)
 posVecIdx = find(distortion==min(distortion(:)));
+posVecIdx = posVecIdx(1);
 
 % convert index into two coordinates
 posVec = [mod(posVecIdx, size(distortion,1))+xmin-1 ...
             ceil(posVecIdx/size(distortion,1))+ymin-1 ];
-        
+
 motionVec = posVec - prevPosVec;
         
 residual = image(posVec(1):posVec(1)+xSize-1, ...
