@@ -94,12 +94,12 @@ MSEfinal_res    = zeros(1,numel(delta));
 % For each quantization level, take all coefficients at a certain position
 % Then calculate the entropy for this i-th coefficient
 for quantStep=1:numel(delta)    % loop through all quantization steps
+    idx = 1;
     for nframe = 1:length(V) % loop over all frames
         for nrow = 1:M
             for ncol = 1:N
                 % loop through all coefficients of a 16x16
                 for coefIdx = 1:16^2          
-                    idx = 1;
                     %coefVec = zeros(50*frame_size(1)*frame_size(2)/16^2,1);
                     %coefIdx
 
