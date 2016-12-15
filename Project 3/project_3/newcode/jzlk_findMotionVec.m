@@ -35,10 +35,12 @@ posVecIdx = find(distortion==min(distortion(:)));
 posVecIdx = posVecIdx(1);
 
 % convert index into two coordinates
+[p1, p2] = ind2sub(size(distortion), posVecIdx);
+posVec = [p1, p2];
 posVec = [mod(posVecIdx, size(distortion,1))+xmin-1 ...
             ceil(posVecIdx/size(distortion,1))+ymin-1 ];
 
-motionVec = posVec - prevPosVec;
+motionVec =   posVec -  prevPosVec;
         
 residual = image(posVec(1):posVec(1)+xSize-1, ...
                 posVec(2):posVec(2) + ySize-1) - prevBlock;

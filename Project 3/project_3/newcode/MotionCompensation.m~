@@ -51,12 +51,13 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
                 blocks{quantStep,nframe}{nrow,ncol}.pos = ...
                      [(nrow-1)*16+1 (ncol-1)*16+1];
                 
+                %prevPosVec = [(nrow-1)*16+1 (ncol-1)*16+1];
                 if nframe >= 2 % previous frame available
                     [blocks{quantStep,nframe}{nrow,ncol}.motionVec,...
                      blocks{quantStep,nframe}{nrow,ncol}.residual ] = ...
                         jzlk_findMotionVec(V{nframe}, ...
                         blocks{quantStep,nframe-1}{nrow, ncol}.imgData,...
-                        blocks{quantStep,nframe-1}{nrow,ncol}.pos);
+                        blocks{quantStep,nframe}{nrow,ncol}.pos);
                 else
                     % the first frame has no previous frame
                     [blocks{quantStep,nframe}{nrow,ncol}.motionVec,...
@@ -81,15 +82,18 @@ end
 
 %% PSNR and rate calculation
 
+% entropy for each coefficient #i, i=1,...,256
+%entropyRate_res = zeros(256,numel(delta));
+
 % codebooks for each coefficients for each quantizer step size
 codebooks_res(256,numel(delta)).codewords = [];
 codebooks_res(256,numel(delta)).codelength = [];
 codebooks_res(256,numel(delta)).entropy = [];
 
-coefVec = zeros(256, numel(delta), 50*frame_size(1)*frame_size(2)/16^2 );
-
 % averaged MSE
 MSEfinal_res    = zeros(1,numel(delta));
+
+coefVec = zeros(256, numel(delta), 50*frame_size(1)*frame_size(2)/16^2 );
 
 % For each quantization level, take all coefficients at a certain position
 % Then calculate the entropy for this i-th coefficient
@@ -109,14 +113,10 @@ for quantStep=1:numel(delta)    % loop through all quantization steps
                 idx = idx +1;
             end
         end
-        
-        b = [blocks{quantStep,nframe}{:,:}];
-        MSEfinal_res(quantStep) = mean([b.MSE]);
     end
 end
 
-Ratefinal_res = zeros(1,numel(delta));
-
+Rateres = zeros(1,numel(delta));
 for quantStep = 1:numel(delta)
     for coefIdx = 1:256
          % Generate VLC for a set of i-th coefficients
@@ -125,10 +125,45 @@ for quantStep = 1:numel(delta)
           codebooks_res(coefIdx, quantStep).entropy] = ...
                                         jzlk_generateCode(coefVec(coefIdx,quantStep,:));
     end
-    Ratefinal_res(quantStep) = mean([codebooks_res(:,quantStep).entropy]);
+    Rateres(quantStep) = mean([codebooks_res(:,quantStep).entropy]);
 end
         
-Ratekbps_res = Ratefinal_res.*30*frame_size(1)*frame_size(2)/1000;
+%         % loop through all frames
+%         for frameNo=2:length(V)
+%             frameQuantCoef = quantCoef{frameNo};
+%             frameQuantMSE = quantMSE{frameNo};
+%             if coefIdx==1
+%                 % Only add one mean for each frame
+%                 MSEsummands(frameNo) =  mean(frameQuantMSE(:));
+%             end
+%             for ii16x16=1:M
+%                 for jj16x16=1:N
+%                     block16x16 = frameQuantCoef{ii16x16,jj16x16};
+%                     coefSerial = block16x16(:);
+%                     % Add the i-th coefficient to the coefVec
+%                     coefVec(idx) = coefSerial(coefIdx);
+%                     idx = idx + 1;
+%                 end
+%             end
+%         end
+
+%         % Generate VLC for a set of i-th coefficients
+%         [ codebooks_res{coefIdx, quantStep}.codewords, ...
+%           codebooks_res{coefIdx, quantStep}.codelength, ...
+%           codebooks_res{coefIdx, quantStep}.entropy] = ...
+%                                         jzlk_generateCode(coefVec);
+          %entropyRate_res(coefIdx, quantStep)] = ...
+        
+        % save the corresponding codebook for the VLC
+%         %codebooks_res{coefIdx, quantStep} = {codeLength, codeVal};
+%     end
+%     
+%     % Average the MSEs 
+%     MSEfinal_res(quantStep) = mean(MSEsummands);
+% end
+
+Ratefinal   = mean(codebooks_res);
+Ratekbps = Ratefinal.*30*frame_size(1)*frame_size(2)/1000;
 
 PSNR = 10*log10(255^2./MSEfinal_res);
 
@@ -137,7 +172,7 @@ PSNR = 10*log10(255^2./MSEfinal_res);
 %% Plot PSNR vs Rate in kbits/sec
 
 figure;
-plot(Ratekbps_res, PSNR, 'LineWidth', 2);
+plot(Ratekbps, PSNR, 'LineWidth', 2);
 grid on;
 hold on
 xlabel('Rate [kbps]');

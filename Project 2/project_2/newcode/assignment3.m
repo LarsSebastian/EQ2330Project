@@ -11,8 +11,7 @@ load coeffs
 
 %% Plot FWT coefficients with scale 4 for report
 
-% the larger the scale, the fewer bits/pixel are required for better
-% transmission
+
 scale = 4;
 
 % Plot image with scale 4
@@ -28,7 +27,7 @@ reconstructionErr = sum(sum((image-imagehat).^2));
 fprintf('The reconstruction error is %.10f.\n', reconstructionErr);
 
 %% Measure PSNR
-scale = 1;
+scale = 4;
 
 % images to use for analysis
 images = {'harbour512x512.tif', 'boats512x512.tif', 'peppers512x512.tif'};
