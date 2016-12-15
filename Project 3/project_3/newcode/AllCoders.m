@@ -27,17 +27,6 @@ Vblk16 = cell(length(V), 1);
 
 blocks = cell(length(delta), length(V));
 
- % blocks of 16x16 containing 8x8 DCT coef BEFORE quantization
-%Vblk16DCT = cell(length(delta), length(V));
-
-% blocks of 16x16 containing 8x8 DCT coef after quantization. These are 
-% basically the sent coefficients for the various quantization steps
-%Vblk16DCTquant = cell(length(delta), length(V));
-
-% Mean Square Error for each block
-%MSE = cell(length(delta), length(V));
-
-
 
 for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     for nframe = 1:length(V) % loop over all frames
@@ -84,9 +73,6 @@ for quantStep=1:numel(delta)    % loop through all quantization steps
             for ncol = 1:N
                 % loop through all coefficients of a 16x16
                 for coefIdx = 1:16^2          
-
-                    %coefVec = zeros(50*frame_size(1)*frame_size(2)/16^2,1);
-                    %coefIdx
                     coefVec(coefIdx, quantStep, idx) = ...
                         blocks{quantStep, nframe}{nrow,ncol}.quantDCT(coefIdx);
                 end
@@ -116,66 +102,6 @@ Ratekbps = Ratefinal.*30*frame_size(1)*frame_size(2)/1000;
 
 PSNR = 10*log10(255^2./MSEfinal);
 
-%% PSNR and rate calculation
-% 
-% % entropy for each coefficient #i, i=1,...,256
-% entropyRate = zeros(256,numel(delta));
-% 
-% % codebooks for each coefficients for each quantizer step size
-% % each cell is (codewordLength, codewordValue)
-% codebooks = cell(256, numel(delta));
-% 
-% % averaged MSE
-% MSEfinal    = zeros(1,numel(delta));
-% 
-% % For each quantization level, take all coefficients at a certain position
-% % Then calculate the entropy for this i-th coefficient
-% for quantStep=1:numel(delta)    % loop through all quantization steps
-%     quantCoef = Vblk16DCTquant(quantStep,:);
-%     MSEsummands = zeros(50,1);
-%     quantMSE = MSE(quantStep,:);
-%     
-%     % loop through all coefficients of a 16x16
-%     for coefIdx = 1:16^2          
-%         idx = 1;
-%         coefVec = zeros(50*frame_size(1)*frame_size(2)/16^2,1);
-%         coefIdx
-%         
-%         % loop through all frames
-%         for frameNo=1:length(V) 
-%             frameQuantCoef = quantCoef{frameNo};
-%             frameQuantMSE = quantMSE{frameNo};
-%             if coefIdx==1
-%                 % Only add one mean for each frame
-%                 MSEsummands(frameNo) =  mean(frameQuantMSE(:));
-%             end
-%             for ii16x16=1:M
-%                 for jj16x16=1:N
-%                     block16x16 = frameQuantCoef{ii16x16,jj16x16};
-%                     coefSerial = block16x16(:);
-%                     % Add the i-th coefficient to the coefVec
-%                     coefVec(idx) = coefSerial(coefIdx);
-%                     idx = idx + 1;
-%                 end
-%             end
-%         end
-% 
-%         % Generate VLC for a set of i-th coefficients
-%         [ codeVal, codeLength, entropyRate(coefIdx, quantStep)] = ...
-%             jzlk_generateCode(coefVec);
-%         
-%         % save the corresponding codebook for the VLC
-%         codebooks{coefIdx, quantStep} = {codeLength, codeVal};
-%     end
-%     
-%     % Average the MSEs 
-%     MSEfinal(quantStep) = mean(MSEsummands);
-% end
-% 
-% Ratefinal   = mean(entropyRate);
-% Ratekbps = Ratefinal.*30*frame_size(1)*frame_size(2)/1000;
-% 
-% PSNR = 10*log10(255^2./MSEfinal);
 
 %% Plot PSNR vs Rate in kbits/sec
 
@@ -189,20 +115,10 @@ ylabel('PSNR [dB]');
 
 %% Start with conditional replenishment
 
-% This is basically the sent coefficients for conditional replenishment
-% coding
-%Vblk16DCT_CR = cell(length(delta), length(V));
+
 
 %% Calculation of Lagrangian cost function
 
-% save all decisions
-%decision = cell(length(V), length(delta));
-
-% save the rate for each block
-%R = cell(length(V),length(delta));
-
-% save the MSE for each block
-%MSE_CR = cell(length(V), length(delta));
 
 for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     
