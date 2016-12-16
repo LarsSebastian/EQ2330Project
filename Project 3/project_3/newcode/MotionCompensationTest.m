@@ -19,5 +19,5 @@ A = [   1 5 4 3 8 2; ...
 % expected result: motionVec=[0 1], residual = zeros, only 1 in bottom
 % right corner
 block = [ 4 3 8; 0 7 4; 8 3 3]
-pos = [1 2]
+pos = [3 4]
 [motionVec, residual] = jzlk_findMotionVec(A, block, pos)

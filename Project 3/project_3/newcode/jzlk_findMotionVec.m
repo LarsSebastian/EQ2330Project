@@ -1,4 +1,4 @@
-function [ motionVec, residual ] = jzlk_findMotionVec( image, prevBlock, prevPosVec)
+function [ motionVec, residual ] = jzlk_findMotionVec( prevImage, curBlock, curPosVec)
 %Returns the motion vector (dx,dy) that minimizes the mean square error
 %(MSE) of the block prediction
 %   image: current image
@@ -9,14 +9,14 @@ function [ motionVec, residual ] = jzlk_findMotionVec( image, prevBlock, prevPos
 
 
 range = 10;
-[xSize, ySize] = size(prevBlock);
+[xSize, ySize] = size(curBlock);
 
 % prevent out of bound errors
-xmin = max(prevPosVec(1)-range+1,1);
-xmax = min(prevPosVec(1)+range-1,size(image,1)-size(prevBlock,1)+1);
+xmin = max(curPosVec(1)-range+1,1);
+xmax = min(curPosVec(1)+range-1,size(prevImage,1)-size(curBlock,1)+1);
 
-ymin = max(prevPosVec(2)-range+1,1);
-ymax = min(prevPosVec(2)+range-1,size(image,2)-size(prevBlock,2)+1);
+ymin = max(curPosVec(2)-range+1,1);
+ymax = min(curPosVec(2)+range-1,size(prevImage,2)-size(curBlock,2)+1);
 
 distortion = zeros(xmax-xmin+1, ymax-ymin+1);
 
@@ -25,8 +25,8 @@ for ix=xmin:xmax
     xtmp = ix-xmin+1;
     for iy=ymin:ymax
        ytmp = iy-ymin+1;
-       tmpBlock = image(ix:ix+xSize-1, iy:iy+ySize-1);
-       distortion(xtmp,ytmp) = sum(abs(tmpBlock(:)-prevBlock(:)).^2);
+       tmpBlock = prevImage(ix:ix+xSize-1, iy:iy+ySize-1);
+       distortion(xtmp,ytmp) = sum(abs(tmpBlock(:)-curBlock(:)).^2);
     end
 end
 
@@ -36,14 +36,16 @@ posVecIdx = posVecIdx(1);
 
 % convert index into two coordinates
 [p1, p2] = ind2sub(size(distortion), posVecIdx);
+p1 = p1+xmin-1;
+p2 = p2+ymin-1;
 posVec = [p1, p2];
-posVec = [mod(posVecIdx, size(distortion,1))+xmin-1 ...
-            ceil(posVecIdx/size(distortion,1))+ymin-1 ];
+%posVec = [mod(posVecIdx, size(distortion,1))+xmin-1 ...
+%            ceil(posVecIdx/size(distortion,1))+ymin-1 ];
 
-motionVec =   posVec -  prevPosVec;
+motionVec =   posVec -  curPosVec;
         
-residual = image(posVec(1):posVec(1)+xSize-1, ...
-                posVec(2):posVec(2) + ySize-1) - prevBlock;
+residual = curBlock - prevImage(posVec(1):posVec(1)+xSize-1, ...
+                posVec(2):posVec(2) + ySize-1);
 
 end
 
