@@ -1,12 +1,15 @@
-% Part 1 (Intra Mode) and Part 2 (Conditional Replenishment) of Project 3
+% Project 3
 % EQ2330 Image and Video Processing
 % Fall Term 2016, KTH
 % Authors: Jan Zimmermann, Lars Kuger
 
 %%
-clear all;
+clear;
+close all;
 clc;
 %% load video
+
+disp('Start initialization...');
 
 %file_name = 'mother-daughter_qcif.yuv';
 file_name = 'foreman_qcif.yuv';
@@ -20,7 +23,10 @@ Vreceived_Intra = cell(numel(delta),50);
 Vreceived_CR = cell(numel(delta),50);
 Vreceived_Inter = cell(numel(delta),50);
 Vrec_Inter_Frame = cell(numel(delta),50);
+Vreceived = cell(numel(delta),50);
+Vreceived_blk = cell(numel(delta),50);
 
+disp('Finished initialization.');
 
 %% start with intra frame coding
 %seperate all frames into blocks of 16 then blocks of 8, apply dct2 and quantization
@@ -31,10 +37,11 @@ Vblk16 = cell(length(V), 1);
 
 blocks = cell(length(delta), length(V));
 
+disp('Start coding in intra frame mode...');
 
 for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     for nframe = 1:length(V) % loop over all frames
-        nframe
+        
         
         %divide each frame into blocks of 16x16
         Vblk16{nframe} = mat2cell(V{nframe}, repmat(16, 1, frame_size(2)/16), ...
@@ -59,28 +66,24 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     end
 end
 
-%% PSNR and rate calculation for pure Intra Mode
 
+% PSNR and rate calculation for pure Intra Mode
 
-[codebooks, Ratefinal, MSEfinal] = jzlk_getCodebooks(blocks, 'quantDCT', 'MSEIntra');
+disp('Calculate PSNR and rate for intra mode...');
+
+[codebooks, Intra.rate, Intra.MSE] = jzlk_getCodebooks(blocks, 'quantDCT', 'MSEIntra');
         
-Ratekbps_Intra = Ratefinal.*30*frame_size(1)*frame_size(2)/1000;
+Intra.Rkbps = Intra.rate.*30*frame_size(1)*frame_size(2)/1000;
 
-PSNR_Intra = 10*log10(255^2./MSEfinal);
-
-
-% Plot PSNR vs Rate in kbits/sec
-figure;
-plot(Ratekbps_Intra, PSNR_Intra, 'LineWidth', 2);
-grid on;
-hold on
-xlabel('Rate [kbps]');
-ylabel('PSNR [dB]');
+Intra.PSNR = 10*log10(255^2./Intra.MSE);
 
 
-%% Start with conditional replenishment
+disp('Finish intra mode coding.');
+
+%% Start with mode decisions for intra and conditional replenishment mode
 % Calculation of Lagrangian cost function
 
+disp('Start coding with mode decision for intra and copy mode...');
 
 for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     
@@ -88,7 +91,6 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     lambda = 0.2*delta(quantStep)^2;
     
     for nframe = 1:length(V) % loop over all frames, comparison between two frames: -1
-        nframe
         
         M = size(V{nframe},1)/16;
         N = size(V{nframe},2)/16;
@@ -101,7 +103,8 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
                 DCTCoef = blocks{quantStep,nframe}{ii,jj}.quantDCT; 
                 Dist_intra = blocks{quantStep,nframe}{ii,jj}.MSEIntra;
                 
-                R_intra = jzlk_getRateStruct(DCTCoef, codebooks, quantStep);
+                % get rate for intra coding
+                R_intra = jzlk_getRateStruct(DCTCoef, codebooks, quantStep, 'coef');
                 R_intra = R_intra + 1/16^2;  % this means 1 bit per block
                 
                 if nframe==1
@@ -158,33 +161,34 @@ end
 
 
 % calculate rate and PSNR
-Rfinal_CR = zeros(1,numel(delta));
-MSEfinal_CR = zeros(1,numel(delta));
+CR.rate = zeros(1,numel(delta));
+CR.MSE = zeros(1,numel(delta));
 for quantStep=1:numel(delta)
     for nframe=1:numel(V)
         curBlock = [blocks{quantStep, nframe}{:,:}];
-        Rfinal_CR(quantStep) = Rfinal_CR(quantStep) + ...
+        CR.rate(quantStep) = CR.rate(quantStep) + ...
             mean([curBlock.R_CR]) / numel(V);
-        MSEfinal_CR(quantStep) = MSEfinal_CR(quantStep) + ...
+        CR.MSE(quantStep) = CR.MSE(quantStep) + ...
             mean([curBlock.MSE_CR]) / numel(V);
     end
 end
 
-R_CRkbps = Rfinal_CR.*30*frame_size(1)*frame_size(2)/1000;
-PSNR_CR = 10*log10(255^2./MSEfinal_CR);
+CR.Rkbps = CR.rate.*30*frame_size(1)*frame_size(2)/1000;
+CR.PSNR = 10*log10(255^2./CR.MSE);
 
-figure(1);
-plot(R_CRkbps, PSNR_CR, 'r', 'LineWidth', 2);
-legend('Intra Mode', 'Conditional Replenishment Mode',...
-    'Location', 'northwest');
+
+disp('Finish coding with mode decision for intra and copy mode.');
+
 
 
 %% Start calculating residuals for Inter Mode
 
+%MSEfinal_spatial = zeros(length(delta),1);
+
+disp('Start calculating residuals for inter mode...');
 
 for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     for nframe = 1:length(V) % loop over all frames
-        nframe
          
         % how many 16x16 block fit into one frame
         [M,N] = size(Vblk16{nframe}); 
@@ -205,7 +209,6 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
                         jzlk_findMotionVec(Vrec_Inter_Frame{quantStep,nframe-1}, ... 
                         Vblk16{nframe}{nrow,ncol},...
                         blocks{quantStep,nframe}{nrow,ncol}.pos);
-                        %2nd argblocks{quantStep,nframe-1}{nrow, ncol}.imgData,...
                 else
                     % the first frame has no previous frame
                     [blocks{quantStep,nframe}{nrow,ncol}.motionVec,...
@@ -213,7 +216,6 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
                         jzlk_findMotionVec(V{nframe}, ... 
                         Vblk16{nframe}{nrow,ncol},...
                         blocks{quantStep,nframe}{nrow,ncol}.pos);
-                        %2nd arg blocks{quantStep,nframe}{nrow, ncol}.imgData, ...
                 end
                 
                 % Apply DCT transform and quantize
@@ -236,6 +238,11 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
                      Vreceived_Inter{quantStep,nframe}{nrow, ncol} =...
                          decode_intraframe2(blocks{quantStep, nframe}{nrow,ncol}.quantDCT);
                  end
+                 
+                 % To be tested
+                 %MSEfinal_spatial(quantStep) = MSEfinal_spatial(quantStep)...
+                 %    + sum(abs(Vreceived_Inter{quantStep,nframe}{nrow,ncol}(:)-...
+                 %    Vblk16{nframe}{nrow,ncol}(:)).^2)/(M*N*length(V)*256);
             end
         end
         Vrec_Inter_Frame{quantStep,nframe} = cell2mat(Vreceived_Inter{quantStep,nframe});
@@ -243,7 +250,8 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
 end
 
 
-%% PSNR and rate calculation
+disp('Generate VLCs...');
+% PSNR and rate calculation
 
 % codebooks for each coefficients for each quantizer step size
 codebooks_mot(numel(delta)).codewords = [];
@@ -260,7 +268,7 @@ for quantStep=1:numel(delta)    % loop through all quantization steps
             for ncol = 1:N
                 % loop through all coefficients of a 16x16
                 coefVec_mot(quantStep, idxMot:idxMot+1) = ...
-                    blocks{quantStep, nframe}{nrow,ncol}.pos;
+                    blocks{quantStep, nframe}{nrow,ncol}.motionVec;
                 idxMot = idxMot + 2;
             end
         end
@@ -268,7 +276,7 @@ for quantStep=1:numel(delta)    % loop through all quantization steps
     end
 end
 
-Ratefinal_mot = zeros(1,numel(delta));
+%Ratefinal_mot = zeros(1,numel(delta));
 
 for quantStep = 1:numel(delta)
     [codebooks_mot(quantStep).codewords, ...
@@ -277,28 +285,16 @@ for quantStep = 1:numel(delta)
         jzlk_generateCode(coefVec_mot(quantStep,:));
 end
 
-% For each quantization level, take all coefficients at a certain position
-% Then calculate the entropy for this i-th coefficient
-[codebooks_res, Ratefinal_res, MSEfinal_res] = ...
+% Get codebook for residuals
+[codebooks_res, ~, ~] = ...
     jzlk_getCodebooks(blocks, 'resDCTquant', 'MSEres');
         
-Ratekbps_res = Ratefinal_res.*30*frame_size(1)*frame_size(2)/1000;
 
-PSNR_res = 10*log10(255^2./MSEfinal_res);
-
-% Plot PSNR vs Rate in kbits/sec
-% Does this plot really make sense? Not sure...
-figure(1);
-plot(Ratekbps_res, PSNR_res, 'LineWidth', 2);
-grid on;
-hold on
-xlabel('Rate [kbps]');
-ylabel('PSNR [dB]');
-
-% Up to here it should work
+disp('Finish generating codes for residuals and motion vectors.');
 
 %% Allow Intra, CR and Inter Mode
-% This part doesn't work correctly yet
+
+disp('Start coding with mode decision for intra, copy and inter mode...');
 
 for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     
@@ -307,39 +303,89 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
     
        
     for nframe = 1:length(V) % loop over all frames, comparison between two frames: -1
-        nframe
         
         M = size(V{nframe},1)/16;
         N = size(V{nframe},2)/16;
         
         
         % loop over all 16x16 blocks
-        for ii = 1:M
-            for jj =1:N
+        for nrow = 1:M
+            for ncol =1:N
                 
                 % Get rates and add another bit for mode indication
-                R_intra = blocks{quantStep,nframe}{ii,jj}.RIntra + 1/16^2;
-                R_copy = blocks{quantStep,nframe}{ii,jj}.RCopy + 1/16^2;
+                R_intra = blocks{quantStep,nframe}{nrow,ncol}.RIntra + 1/16^2;
+                R_copy = 2/16^2;
                 
                 Rres_inter = jzlk_getRateStruct(...
-                    blocks{quantStep,nframe}{ii,jj}.resDCTquant, ...
-                    codebooks_res, quantStep);
+                    blocks{quantStep,nframe}{nrow,ncol}.resDCTquant, ...
+                    codebooks_res, quantStep, 'coef');
                 Roffset_inter = 2/16^2;
                 Rpos_inter = jzlk_getRateStruct(...
-                    blocks{quantStep,nframe}{ii,jj}.pos, ...
-                    codebooks_mot, quantStep);
+                    blocks{quantStep,nframe}{nrow,ncol}.motionVec, ...
+                    codebooks_mot, quantStep, 'motion')*2./16^2;
                 R_inter = Rres_inter + Roffset_inter + Rpos_inter;
                 
-                Dist_intra = blocks{quantStep,nframe}{ii,jj}.MSEIntra;
-                Dist_copy = blocks{quantStep,nframe}{ii,jj}.MSECopy;
-                Dist_inter = blocks{quantStep,nframe}{ii,jj}.MSEInter;
+                Dist_intra = blocks{quantStep,nframe}{nrow,ncol}.MSEIntra;               
+                %Dist_inter = blocks{quantStep,nframe}{ii,jj}.MSEInter;
 
                 
                 if nframe==1
                     % the first frame has to be transmitted in intra mode
                     J_copy = inf;
                     J_inter= inf;
+                    
+                    % Calculations for Inter Mode
+                    % get residual and motion vector
+                    [blocks{quantStep,nframe}{nrow,ncol}.motionVecAll,...
+                     blocks{quantStep,nframe}{nrow,ncol}.residualAll ] = ...
+                        jzlk_findMotionVec(V{nframe}, ... 
+                        Vblk16{nframe}{nrow,ncol},...
+                        blocks{quantStep,nframe}{nrow,ncol}.pos);
+                    
+                    % Apply DCT transform and quantize
+                    [blocks{quantStep,nframe}{nrow,ncol}.resDCTAll,...
+                        blocks{quantStep,nframe}{nrow,ncol}.resDCTquantAll, ...
+                        blocks{quantStep,nframe}{nrow,ncol}.MSEresAll ] = ...
+                        encode_intraframe2(blocks{quantStep,nframe}{nrow,ncol}.residualAll, ...
+                        delta(quantStep));
+                    
                 else
+                    % Calculate the distortion between the previously sent
+                    % coefficients and the UNquantized DCT coefficients of the
+                    % current frame
+                    framePrevSent = Vreceived_blk{quantStep,nframe-1}{nrow,ncol};
+                    frameCur = blocks{quantStep,nframe}{nrow,ncol}.imgData;
+                    Dist_copy = sum(abs(framePrevSent(:)-frameCur(:)).^2)/16^2;
+                    
+                    % Calculations for Inter Mode
+                    % get residual and motion vector
+                    [blocks{quantStep,nframe}{nrow,ncol}.motionVecAll,...
+                     blocks{quantStep,nframe}{nrow,ncol}.residualAll ] = ...
+                        jzlk_findMotionVec(Vreceived{quantStep,nframe-1}, ... 
+                        Vblk16{nframe}{nrow,ncol},...
+                        blocks{quantStep,nframe}{nrow,ncol}.pos);
+                    
+                    % Apply DCT transform and quantize
+                    [blocks{quantStep,nframe}{nrow,ncol}.resDCTAll,...
+                        blocks{quantStep,nframe}{nrow,ncol}.resDCTquantAll, ...
+                        blocks{quantStep,nframe}{nrow,ncol}.MSEresAll ] = ...
+                        encode_intraframe2(blocks{quantStep,nframe}{nrow,ncol}.residualAll, ...
+                        delta(quantStep));
+                    
+                     %reconstruct image from residual and motion vector
+                     resimg = decode_intraframe2(blocks{quantStep,nframe}{nrow,ncol}.resDCTquantAll);
+                     prevPos = blocks{quantStep,nframe}{nrow,ncol}.pos + ...
+                         blocks{quantStep,nframe}{nrow,ncol}.motionVecAll;
+                     previmgpart = Vreceived{quantStep,nframe-1}...
+                         (prevPos(1):prevPos(1)+15, prevPos(2):prevPos(2)+15);
+
+                     reconstructedImg = previmgpart + resimg;
+                     
+                     % To be tested
+                     Dist_inter = sum(abs(reconstructedImg(:)-...
+                     Vblk16{nframe}{nrow,ncol}(:)).^2)/(M*N);
+                    
+                    
                     % calculate cost functions
                     J_copy = Dist_copy + lambda*R_copy;
                     J_inter = Dist_inter + lambda*R_inter;
@@ -347,40 +393,77 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
                 
                 J_intra = Dist_intra + lambda*R_intra;
                 
-                minIdx = find(min([J_intra J_copy J_inter]));
+                Jtot = [J_intra J_copy J_inter];
+                minIdx = find(Jtot == min(Jtot));
                 minIdx = minIdx(1);
                 
                 % compare cost functions and decide on mode
                 if minIdx == 1 % intra mode
-                    blocks{quantStep,nframe}{ii,jj}.quantDCT_CR = DCTCoef;
-                    blocks{quantStep,nframe}{ii,jj}.decision = 1;
-                    blocks{quantStep,nframe}{ii,jj}.R = R_intra; 
-                    blocks{quantStep,nframe}{ii,jj}.MSE_CR = Dist_intra;
+                    blocks{quantStep,nframe}{nrow,ncol}.receivedDCTAll = ...
+                        blocks{quantStep,nframe}{nrow,ncol}.quantDCT;
+                    blocks{quantStep,nframe}{nrow,ncol}.decision_All = 1;
+                    blocks{quantStep,nframe}{nrow,ncol}.R_All = R_intra; 
+                    blocks{quantStep,nframe}{nrow,ncol}.MSE_All = Dist_intra;
+                    Vreceived{quantStep,nframe}{nrow,ncol} = ...
+                        decode_intraframe2(blocks{quantStep,nframe}{nrow,ncol}.quantDCT);
                 elseif minIdx == 2 % copy mode
-                    blocks{quantStep,nframe}{ii,jj}.quantDCT_CR = ...
-                        blocks{quantStep,nframe-1}{ii,jj}.quantDCT_CR;
-                    blocks{quantStep,nframe}{ii,jj}.decision = 2;
-                    blocks{quantStep,nframe}{ii,jj}.R = R_copy; 
-                    blocks{quantStep,nframe}{ii,jj}.MSE_CR = Dist_copy;
+                    blocks{quantStep,nframe}{nrow,ncol}.receivedDCTAll = ...
+                        blocks{quantStep,nframe-1}{nrow,ncol}.receivedDCTAll;
+                    blocks{quantStep,nframe}{nrow,ncol}.decision_All = 2;
+                    blocks{quantStep,nframe}{nrow,ncol}.R_All = R_copy; 
+                    blocks{quantStep,nframe}{nrow,ncol}.MSE_All = Dist_copy;
+                    Vreceived{quantStep,nframe}{nrow,ncol} = ...
+                    decode_intraframe2(blocks{quantStep,nframe}{nrow,ncol}.receivedDCTAll);
                 elseif minIdx == 3 % inter mode
-                    blocks{quantStep,nframe}{ii,jj}.quantDCT_CR = ...
-                        blocks{quantStep,nframe-1}{ii,jj}.quantDCT_CR;
-                    blocks{quantStep,nframe}{ii,jj}.decision = 3;
-                    blocks{quantStep,nframe}{ii,jj}.R = R_inter; 
-                    blocks{quantStep,nframe}{ii,jj}.MSE_CR = Dist_copy;
+                    [~, blocks{quantStep,nframe}{nrow,ncol}.receivedDCTAll, ~] = ...
+                        encode_intraframe2(reconstructedImg, delta(quantStep));
+                    blocks{quantStep,nframe}{nrow,ncol}.decision_All = 3;
+                    blocks{quantStep,nframe}{nrow,ncol}.R_All = R_inter; 
+                    blocks{quantStep,nframe}{nrow,ncol}.MSE_All = Dist_inter;
+                    Vreceived{quantStep,nframe}{nrow,ncol} = reconstructedImg;
                 end
-                
-                % it already contains 2 bit for decision
-                blocks{quantStep,nframe}{ii,jj}.RIntra = R_intra;
-                blocks{quantStep,nframe}{ii,jj}.RCopy = R_copy;
-                blocks{quantStep,nframe}{ii,jj}.RInter = R_inter;
                 
                 
             end
         end
-        
+        Vreceived_blk{quantStep,nframe} = Vreceived{quantStep,nframe};
+        Vreceived{quantStep,nframe} = cell2mat(Vreceived{quantStep,nframe});
     end
-   
 end
 
 
+% calculate rate and PSNR
+Inter.rate = zeros(1,numel(delta));
+Inter.MSE = zeros(1,numel(delta));
+for quantStep=1:numel(delta)
+    for nframe=1:numel(V)
+        curBlock = [blocks{quantStep, nframe}{:,:}];
+        Inter.rate(quantStep) = Inter.rate(quantStep) + ...
+            mean([curBlock.R_All]) / numel(V);
+        Inter.MSE(quantStep) = Inter.MSE(quantStep) + ...
+            mean([curBlock.MSE_All]) / numel(V);
+    end
+end
+
+Inter.Rkbps = Inter.rate.*30*frame_size(1)*frame_size(2)/1000;
+Inter.PSNR = 10*log10(255^2./Inter.MSE);
+
+
+
+%% Make the plots
+
+% Plot PSNR vs Rate in kbits/sec
+figure;
+plot(Intra.Rkbps, Intra.PSNR, 'o-','LineWidth', 2);
+grid on;
+hold on
+xlabel('Rate [kbps]');
+ylabel('PSNR [dB]');
+
+plot(CR.Rkbps, CR.PSNR, 'rx-.', 'LineWidth', 2);
+
+plot(Inter.Rkbps, Inter.PSNR, 'k--', 'LineWidth', 2);
+legend('Intra Mode', 'Intra and Copy Mode', 'Intra, Copy and Inter Mode', ...
+    'Location', 'northwest');
+
+disp('Finish coding.');
