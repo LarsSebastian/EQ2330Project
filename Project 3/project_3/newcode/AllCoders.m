@@ -383,7 +383,7 @@ for quantStep = 1:length(delta)  % loop over step sizes of quantizer
                      
                      % To be tested
                      Dist_inter = sum(abs(reconstructedImg(:)-...
-                     Vblk16{nframe}{nrow,ncol}(:)).^2)/(M*N);
+                     Vblk16{nframe}{nrow,ncol}(:)).^2)/(16^2);
                     
                     
                     % calculate cost functions
