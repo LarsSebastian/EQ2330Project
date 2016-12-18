@@ -11,7 +11,7 @@ tmp = [blocks{quantStepIdx,1}{:,:}];
 decision = [tmp.(fieldname)];
 decision = reshape(decision, s);
 
-h = imagesc(decision);
+h = imagesc(decision, [1 3]);
 c = colorbar;
 colorbar('Ticks',[1,2,3],...
          'TickLabels',{'Intra','Copy','Inter'})

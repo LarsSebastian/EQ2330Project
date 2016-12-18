@@ -452,6 +452,8 @@ Inter.PSNR = 10*log10(255^2./Inter.MSE);
 
 %% Make the plots
 
+jzlk_generatePlot(Vreceived, 2, blocks, 3, 'decision_All');
+
 % Plot PSNR vs Rate in kbits/sec
 figure;
 plot(Intra.Rkbps, Intra.PSNR, 'o-','LineWidth', 2);
